@@ -22,7 +22,12 @@ def over_write_args_from_file(args, yml):
     if yml == '':
         return
     with open(yml, 'r', encoding='utf-8') as f:
-        dic = yaml.load(f.read(), Loader=yaml.Loader)
+        # 低版本的实现
+        # dic = yaml.load(f.read(), Loader=yaml.Loader)
+
+        # 高版本的实现
+        yamll = yaml.YAML(typ='rt')
+        dic = yamll.load(f.read())
         for k in dic:
             setattr(args, k, dic[k])
 

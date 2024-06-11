@@ -6,12 +6,13 @@ load_path: ./saved_models/usb_cv//fixmatch_cifar100_200_0/latest_model.pth
 overwrite: True
 use_tensorboard: True
 use_wandb: False
+use_aim: False
 epoch: 200
 num_train_iter: 204800
 num_log_iter: 256
 num_eval_iter: 2048
-batch_size: 8
-eval_batch_size: 16
+batch_size: 16
+eval_batch_size: 32
 num_warmup_iter: 5120
 num_labels: 200
 uratio: 1
@@ -41,7 +42,7 @@ seed: 0
 world_size: 1
 rank: 0
 multiprocessing_distributed: True
-dist_url: tcp://127.0.0.1:10006
+dist_url: tcp://127.0.0.1:10016
 dist_backend: nccl
 gpu: None
 use_pretrain: True

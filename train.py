@@ -331,8 +331,8 @@ def main_worker(gpu, ngpus_per_node, args):
     random.seed(args.seed)
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
-    cudnn.deterministic = True
-    cudnn.benchmark = True
+    cudnn.deterministic = True  # 在确定性模式下，cuDNN 使用确定性的算法，即每次运行时都会得到相同的结果
+    cudnn.benchmark = True      # 在benchmark模式下，cuDNN 会寻找最适合当前配置的高效算法，以提高性能
 
     # SET UP FOR DISTRIBUTED TRAINING
     if args.distributed:
@@ -408,3 +408,6 @@ if __name__ == "__main__":
     port = get_port()
     args.dist_url = "tcp://127.0.0.1:" + str(port)
     main(args)
+
+# python eval.py --dataset cifar100 --num_classes 100 --load_path /PATH/TO/CHECKPOINT
+# python train.py --c config/usb_cv/fixmatch/fixmatch_cifar100_200_0.yaml

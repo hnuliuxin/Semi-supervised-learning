@@ -140,3 +140,6 @@ dmypy.json
 
 # MacOS system file
 .DS_Store
+
+# gzipped files
+*.gz

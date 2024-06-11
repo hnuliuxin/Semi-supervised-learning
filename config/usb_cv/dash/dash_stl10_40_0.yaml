@@ -6,6 +6,7 @@ load_path: ./saved_models/usb_cv//dash_stl10_40_0/latest_model.pth
 overwrite: True
 use_tensorboard: True
 use_wandb: False
+use_aim: False
 epoch: 200
 num_train_iter: 204800
 num_log_iter: 256
@@ -44,7 +45,7 @@ seed: 0
 world_size: 1
 rank: 0
 multiprocessing_distributed: True
-dist_url: tcp://127.0.0.1:10060
+dist_url: tcp://127.0.0.1:10178
 dist_backend: nccl
 gpu: None
 use_pretrain: True

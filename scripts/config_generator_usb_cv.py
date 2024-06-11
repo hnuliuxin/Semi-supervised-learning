@@ -8,13 +8,19 @@ import os
 
 
 def create_configuration(cfg, cfg_file):
-    cfg["save_name"] = "{alg}_{dataset}_{num_lb}_{seed}".format(
+    # cfg["save_name"] = "{alg}_{dataset}_{num_lb}_{seed}".format(
+    #     alg=cfg["algorithm"],
+    #     dataset=cfg["dataset"],
+    #     num_lb=cfg["num_labels"],
+    #     seed=cfg["seed"],
+    # )
+    cfg["save_name"] = "{alg}_{dataset}_{num_lb}_{net}_{seed}".format(
         alg=cfg["algorithm"],
         dataset=cfg["dataset"],
         num_lb=cfg["num_labels"],
+        net=cfg["net"],
         seed=cfg["seed"],
     )
-
     # resume
     cfg["resume"] = True
     cfg["load_path"] = "{}/{}/latest_model.pth".format(
@@ -297,31 +303,20 @@ def exp_usb_cv(label_amount):
         os.mkdir(save_path)
 
     algs = [
-        "flexmatch",
         "fixmatch",
         "uda",
         "pseudolabel",
         "fullysupervised",
         "supervised",
-        "remixmatch",
         "mixmatch",
         "meanteacher",
-        "pimodel",
-        "vat",
         "dash",
-        "crmatch",
-        "comatch",
-        "simmatch",
-        "adamatch",
-        "freematch",
-        "softmatch",
-        "defixmatch",
     ]
     datasets = ["cifar100", "eurosat", "semi_aves", "tissuemnist", "stl10"]
     # algs = ['fixmatch', 'flexmatch', 'comatch', 'simmatch']
     # datasets = ['imagenet']
-    # seeds = [0, 1, 2]  # 1, 22, 333
-    seeds = [0]
+    seeds = [0, 1, 2]  # 1, 22, 333
+    # seeds = [0]
 
     dist_port = range(10001, 11120, 1)
     count = 0

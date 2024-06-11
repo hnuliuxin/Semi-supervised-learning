@@ -361,7 +361,7 @@ class AlgorithmBase:
         F1 = f1_score(y_true, y_pred, average='macro')
 
         cf_mat = confusion_matrix(y_true, y_pred, normalize='true')
-        self.print_fn('confusion matrix:\n' + np.array_str(cf_mat))
+        # self.print_fn('confusion matrix:\n' + np.array_str(cf_mat))
         self.ema.restore()
         self.model.train()
 
