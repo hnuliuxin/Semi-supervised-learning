@@ -1,13 +1,13 @@
 import os
 
 import torch
-from .utils import DashThresholdingHook
 from semilearn.core import AlgorithmBase
 from semilearn.core.utils import EMA, ALGORITHMS
 from semilearn.algorithms.hooks import PseudoLabelingHook
 from semilearn.algorithms.utils import SSL_Argument
 from semilearn.datasets import DistributedSampler
 
+@ALGORITHMS.register('srd')
 class SRD(AlgorithmBase):
     """
         SRD algorithm (https://arxiv.org/pdf/2205.06701.pdf).
