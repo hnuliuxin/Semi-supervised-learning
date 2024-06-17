@@ -96,3 +96,25 @@ def get_tiny_imagenet(args, alg, name, num_labels, num_classes, data_dir='./data
                                                                 lb_imbalance_ratio=args.lb_imb_ratio,
                                                                 ulb_imbalance_ratio=args.ulb_imb_ratio,
                                                                 include_lb_to_ulb=include_lb_to_ulb)
+
+    lb_count = [0 for _ in range(num_classes)]
+    ulb_count = [0 for _ in range(num_classes)]
+    for c in lb_targets:
+        lb_count[c] += 1
+    for c in ulb_targets:
+        ulb_count[c] += 1
+    print("lb count: {}".format(lb_count))
+    print("ulb count: {}".format(ulb_count))
+
+    if alg == 'fullysupervised':
+        lb_data = data
+        lb_targets = targets
+    
+
+    lb_dset = BasicDataset(alg, lb_data, lb_targets, num_classes, transform_weak, False, transform_strong, transform_strong, False)
+    ulb_dset = BasicDataset(alg, ulb_data, ulb_targets, num_classes, transform_weak, True, transform_medium, transform_strong, False)
+    
+    eval_data, eval_targets = val_set.data, val_set.targets
+    eval_dset = BasicDataset(alg, eval_data, eval_targets, num_classes, transform_val, False, None, None, False)
+
+    return lb_dset, ulb_dset, eval_dset
