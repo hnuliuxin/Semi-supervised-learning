@@ -169,3 +169,27 @@ def wrn_28_8(pretrained=False, pretrained_path=None, **kwargs):
     if pretrained:
         model = load_checkpoint(model, pretrained_path)
     return model
+
+def wrn_40_2(pretrained=False, pretrained_path=None, **kwargs):
+    model = WideResNet(first_stride=1, depth=40, widen_factor=2, **kwargs)
+    if pretrained:
+        model = load_checkpoint(model, pretrained_path)
+    return model
+
+def wrn_40_1(pretrained=False, pretrained_path=None, **kwargs):
+    model = WideResNet(first_stride=1, depth=40, widen_factor=1, **kwargs)
+    if pretrained:
+        model = load_checkpoint(model, pretrained_path)
+    return model
+
+def wrn_16_1(pretrained=False, pretrained_path=None, **kwargs):
+    model = WideResNet(first_stride=1, depth=16, widen_factor=1, **kwargs)
+    if pretrained:
+        model = load_checkpoint(model, pretrained_path)
+    return model
+
+def wrn_16_2(pretrained=False, pretrained_path=None, **kwargs):
+    model = WideResNet(first_stride=1, depth=16, widen_factor=2, **kwargs)
+    if pretrained:
+        model = load_checkpoint(model, pretrained_path)
+    return model
