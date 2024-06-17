@@ -175,10 +175,15 @@ class MobileNetV2(nn.Module):
                 m.bias.data.zero_()
 
 
-def mobilenetv2_T_w(T, W, feature_dim=100):
-    model = MobileNetV2(T=T, feature_dim=feature_dim, width_mult=W)
+def mobilenetv2_T_w(**kwargs):
+    model_kwargs = dict(width_mult=kwargs['W'], T=kwargs['T'], feature_dim=kwargs['num_classes'])
+    model = MobileNetV2(**model_kwargs)
     return model
 
 
-def mobilenet(num_classes):
-    return mobilenetv2_T_w(6, 0.5, num_classes)
+def mobilenet(pretrained=False, pretrained_path=None, **kwargs):
+    model_kwargs = dict(T=6, W=0.5, **kwargs)
+    model = mobilenetv2_T_w(**model_kwargs)
+    if pretrained:
+        model.load_state_dict(torch.load(pretrained_path))
+    return model
