@@ -8,19 +8,19 @@ import os
 
 
 def create_configuration(cfg, cfg_file):
-    # cfg["save_name"] = "{alg}_{dataset}_{num_lb}_{seed}".format(
-    #     alg=cfg["algorithm"],
-    #     dataset=cfg["dataset"],
-    #     num_lb=cfg["num_labels"],
-    #     seed=cfg["seed"],
-    # )
-    cfg["save_name"] = "{alg}_{dataset}_{num_lb}_{net}_{seed}".format(
+    cfg["save_name"] = "{alg}_{dataset}_{num_lb}_{seed}".format(
         alg=cfg["algorithm"],
         dataset=cfg["dataset"],
         num_lb=cfg["num_labels"],
-        net=cfg["net"],
         seed=cfg["seed"],
     )
+    # cfg["save_name"] = "{alg}_{dataset}_{num_lb}_{net}_{seed}".format(
+    #     alg=cfg["algorithm"],
+    #     dataset=cfg["dataset"],
+    #     num_lb=cfg["num_labels"],
+    #     net=cfg["net"],
+    #     seed=cfg["seed"],
+    # )
     # resume
     cfg["resume"] = True
     cfg["load_path"] = "{}/{}/latest_model.pth".format(
@@ -306,13 +306,21 @@ def exp_usb_cv(label_amount):
         "fixmatch",
         "uda",
         "pseudolabel",
+        "mixmatch",
+        "remixmatch",
+        "crmatch",
+        "comatch",
+        "simmatch",
+        "meanteacher",
+        "pimodel",
+        "dash",
         "fullysupervised",
         "supervised",
-        "mixmatch",
-        "meanteacher",
-        "dash",
+        
+        
+        
     ]
-    datasets = ["cifar100", "eurosat", "semi_aves", "tissuemnist", "stl10"]
+    datasets = ["cifar100", "eurosat", "semi_aves", "tissuemnist", "stl10", "tiny_imagenet"]
     # algs = ['fixmatch', 'flexmatch', 'comatch', 'simmatch']
     # datasets = ['imagenet']
     seeds = [0, 1, 2]  # 1, 22, 333
