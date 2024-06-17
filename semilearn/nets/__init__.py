@@ -9,3 +9,4 @@ from .wave2vecv2 import wave2vecv2_base
 from .hubert import hubert_base
 from .mobilenet import mobilenet
 from .shufflenet import ShuffleV1, ShuffleV2
+from .vgg import vgg8, vgg11, vgg13, vgg16, vgg19
