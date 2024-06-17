@@ -4,7 +4,7 @@ See the paper "ShuffleNet V2: Practical Guidelines for Efficient CNN Architectur
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+from semilearn.nets.utils import load_checkpoints
 
 class ShuffleBlock(nn.Module):
     def __init__(self, groups=2):
@@ -193,6 +193,8 @@ configs = {
 }
 
 
-def ShuffleV2(**kwargs):
+def ShuffleV2(pretrained=False, pretrained_path=None, **kwargs):
     model = ShuffleNetV2(net_size=1, **kwargs)
+    if pretrained:
+        model = load_checkpoints(model, pretrained_path)
     return model

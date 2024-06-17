@@ -4,7 +4,7 @@ See the paper "ShuffleNet: An Extremely Efficient Convolutional Neural Network f
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+from semilearn.nets.utils import load_checkpoint
 
 class ShuffleBlock(nn.Module):
     def __init__(self, groups):
@@ -116,11 +116,14 @@ class ShuffleNet(nn.Module):
             return out
 
 
-def ShuffleV1(**kwargs):
+def ShuffleV1(pretrained=False, pretrained_path=None, **kwargs):
     cfg = {
         'out_planes': [240, 480, 960],
         'num_blocks': [4, 8, 4],
         'groups': 3
     }
-    return ShuffleNet(cfg, **kwargs)
+    model = ShuffleNet(cfg, **kwargs)
+    if pretrained:
+        model = load_checkpoint(model, pretrained_path)
+    return model
 
