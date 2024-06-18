@@ -56,7 +56,7 @@ class BasicDataset(Dataset):
         self.medium_transform = medium_transform
         if self.strong_transform is None:
             if self.is_ulb:
-                assert self.alg not in ['fullysupervised', 'supervised', 'pseudolabel', 'vat', 'pimodel', 'meanteacher', 'mixmatch', 'refixmatch'], f"alg {self.alg} requires strong augmentation"
+                assert self.alg  in ['fullysupervised', 'supervised', 'pseudolabel', 'vat', 'pimodel', 'meanteacher', 'mixmatch', 'refixmatch'], f"alg {self.alg} requires strong augmentation"
     
         if self.medium_transform is None:
             if self.is_ulb:
