@@ -13,7 +13,7 @@ num_log_iter: 256
 num_eval_iter: 2048
 batch_size: 8
 eval_batch_size: 16
-num_warmup_iter: 5120
+num_warmup_iter: 0
 num_labels: 400
 uratio: 1
 ema_m: 0.0
@@ -42,7 +42,7 @@ seed: 2
 world_size: 1
 rank: 0
 multiprocessing_distributed: True
-dist_url: tcp://127.0.0.1:10027
+dist_url: tcp://127.0.0.1:10012
 dist_backend: nccl
 gpu: None
 use_pretrain: True
