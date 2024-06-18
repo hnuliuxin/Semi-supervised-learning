@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch.nn.functional as F
 import math
-
+from semilearn.nets.utils import load_checkpoint
 
 __all__ = [
     "VGG",
@@ -152,52 +152,62 @@ cfg = {
 }
 
 
-def vgg8(**kwargs):
+def vgg8(pretrained=False, pretrained_path=None, **kwargs):
     """VGG 8-layer model (configuration "S")
     Args:
         batch_norm (bool): If True, use batch normalization
         num_classes (int): Number of classes
     """
     model = VGG(cfg["S"], **kwargs)
+    if pretrained:
+        load_checkpoint(model, pretrained_path)
     return model
 
 
-def vgg11(**kwargs):
+def vgg11(pretrained=False, pretrained_path=None, **kwargs):
     """VGG 11-layer model (configuration "A")
     Args:
         batch_norm (bool): If True, use batch normalization
         num_classes (int): Number of classes
     """
     model = VGG(cfg["A"], **kwargs)
+    if pretrained:
+        load_checkpoint(model, pretrained_path)
     return model
 
 
 
-def vgg13(**kwargs):
+def vgg13(pretrained=False, pretrained_path=None, **kwargs):
     """VGG 13-layer model (configuration "B")
     Args:
         batch_norm (bool): If True, use batch normalization
         num_classes (int): Number of classes
     """
     model = VGG(cfg["B"], **kwargs)
+    if pretrained:
+        load_checkpoint(model, pretrained_path)
     return model
 
 
-def vgg16(**kwargs):
+def vgg16(pretrained=False, pretrained_path=None, **kwargs):
     """VGG 16-layer model (configuration "D")
     Args:
         batch_norm (bool): If True, use batch normalization
         num_classes (int): Number of classes
     """
     model = VGG(cfg["D"], **kwargs)
+    if pretrained:
+        load_checkpoint(model, pretrained_path)
     return model
 
 
-def vgg19(**kwargs):
+def vgg19(pretrained=False, pretrained_path=None, **kwargs):
     """VGG 19-layer model (configuration "E")
     Args:
         batch_norm (bool): If True, use batch normalization
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
     model = VGG(cfg["E"], **kwargs)
+    if pretrained:
+        load_checkpoint(model, pretrained_path)
     return model

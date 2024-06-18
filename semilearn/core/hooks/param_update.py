@@ -18,6 +18,7 @@ class ParamUpdateHook(Hook):
             algorithm.start_run.record()
 
     # call after each train_step to update parameters
+    # 此处回传梯度
     def after_train_step(self, algorithm):
         loss = algorithm.out_dict['loss']
         # algorithm.optimizer.zero_grad()
