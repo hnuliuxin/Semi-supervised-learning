@@ -30,6 +30,7 @@ class BasicDataset(Dataset):
                  medium_transform=None,
                  strong_transform=None,
                  onehot=False,
+                 data_type='numpy',
                  *args, 
                  **kwargs):
         """
@@ -54,6 +55,7 @@ class BasicDataset(Dataset):
         self.transform = transform
         self.strong_transform = strong_transform
         self.medium_transform = medium_transform
+        self.data_type = data_type
         if self.strong_transform is None:
             if self.is_ulb:
                 assert self.alg  in ['fullysupervised', 'supervised', 'pseudolabel', 'vat', 'pimodel', 'meanteacher', 'mixmatch', 'refixmatch'], f"alg {self.alg} requires strong augmentation"

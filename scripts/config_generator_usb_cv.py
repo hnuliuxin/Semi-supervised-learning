@@ -364,6 +364,18 @@ def exp_usb_cv(label_amount):
 
                     lr = 5e-4
                     layer_decay = 0.5
+                # 加入tiny_imagenet
+                elif dataset == "tiny_imagenet":
+                    num_classes = 200
+                    num_labels = label_amount[1] * num_classes
+
+                    img_size = 32
+                    crop_ratio = 0.875
+                    net = "vit_small_patch2_32"
+                    pretrain_name = "vit_small_patch2_32_mlp_im_1k_32.pth"
+
+                    lr = 5e-4
+                    layer_decay = 0.5
 
                 elif dataset == "svhn":
                     img_size = 32
