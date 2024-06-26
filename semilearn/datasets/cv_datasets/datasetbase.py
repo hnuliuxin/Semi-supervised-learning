@@ -74,7 +74,13 @@ class BasicDataset(Dataset):
             target = target_ if not self.onehot else get_onehot(self.num_classes, target_)
 
         # set augmented images
-        img = self.data[idx]
+        if self.data_type == 'numpy':
+            img = self.data[idx]
+        elif self.data_type == 'pil':
+            img_path = self.data[idx][0]
+            img = Image.open(img_path).convert('RGB')
+        else:
+            raise ValueError(f"Invalid data type: {self.data_type}")
         return img, target
 
     def __getitem__(self, idx):

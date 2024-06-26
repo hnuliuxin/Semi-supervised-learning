@@ -274,7 +274,13 @@ def exp_OSSL_cv(label_amount):
         "vgg8"
     ]
 
-    datasets = ["cifar100_with_tiny_imagenet", "cifar100_with_places365", "cifar100", "tiny_imagenet", "cifar100_and_tiny_imagenet", "cifar100_and_places365"]
+    datasets = [
+        "cifar100_with_tiny_imagenet",
+        "cifar100_with_places365", 
+        "cifar100", "tiny_imagenet", 
+        "cifar100_and_tiny_imagenet", 
+        "cifar100_and_places365"
+    ]
     seeds = [0, 1, 2]
 
     dist_port = range(10001, 15120, 1)

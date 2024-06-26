@@ -4,7 +4,7 @@ import torchvision
 import numpy as np
 import math
 from PIL import Image
-
+import torch
 from torchvision import transforms, datasets
 from .datasetbase import BasicDataset
 from semilearn.datasets.augmentation import RandAugment, RandomResizedCropAndInterpolation
@@ -14,9 +14,10 @@ from torch.utils.data import Dataset
 class ImageFolderInstance(datasets.ImageFolder):
     def __getitem__(self, index):
         path, target = self.imgs[index]
+        img = Image.open(path).convert('RGB')
+        # 返回三通道图片的(32,32,3)数组
+        img = transforms.ToTensor()(img)
         img = self.loader(path)
-        if self.transform is not None:
-            img = self.transform(img)
         return img, target, index
     
 class TinyImageNetValidation(Dataset):
@@ -40,10 +41,12 @@ class TinyImageNetValidation(Dataset):
         label = int(self.label_to_index[self.annotations[index][1]])
         if self.transform is not None:
             image = self.transform(image)
-        return image, label, index
+        # return image, label, index
+        return {'idx_lb': index, 'x_lb': image, 'y_lb': label}
 
-mean = [0.4802, 0.4481, 0.3975]
-std = [0.2302, 0.2265, 0.2262]
+mean, std = {}, {}
+mean['tiny_imagenet'] = [0.4802, 0.4481, 0.3975]
+std['tiny_imagenet'] = [0.2770, 0.2691, 0.2821]
 
 def get_tiny_imagenet(args, alg, name, num_labels, num_classes, data_dir='./data', include_lb_to_ulb=True):
     data_dir = os.path.join(data_dir, name.lower())
@@ -51,9 +54,13 @@ def get_tiny_imagenet(args, alg, name, num_labels, num_classes, data_dir='./data
     val_path = os.path.join(data_dir, 'val')
     
     train_set = ImageFolderInstance(train_path)
-    val_set = ImageFolderInstance(val_path)
+
+    label_to_index = train_set.class_to_idx
+    
 
     data, targets = train_set.samples, train_set.targets
+    print("data: ", data[0])
+    print("targets: ", targets[0])
 
     crop_size = args.img_size
     crop_ratio = args.crop_ratio
@@ -103,18 +110,31 @@ def get_tiny_imagenet(args, alg, name, num_labels, num_classes, data_dir='./data
         lb_count[c] += 1
     for c in ulb_targets:
         ulb_count[c] += 1
-    print("lb count: {}".format(lb_count))
-    print("ulb count: {}".format(ulb_count))
+    # print("lb count: {}".format(lb_count))
+    # print("ulb count: {}".format(ulb_count))
 
     if alg == 'fullysupervised':
         lb_data = data
         lb_targets = targets
     
-
-    lb_dset = BasicDataset(alg, lb_data, lb_targets, num_classes, transform_weak, False, transform_strong, transform_strong, False)
-    ulb_dset = BasicDataset(alg, ulb_data, ulb_targets, num_classes, transform_weak, True, transform_medium, transform_strong, False)
+    val_set = TinyImageNetValidation(val_path, label_to_index, transform=transform_val)
     
-    eval_data, eval_targets = val_set.data, val_set.targets
-    eval_dset = BasicDataset(alg, eval_data, eval_targets, num_classes, transform_val, False, None, None, False)
+    
+    lb_dset = BasicDataset(alg, lb_data, lb_targets, num_classes, transform_weak, False, transform_strong, transform_strong, False, data_type='pil')
+    ulb_dset = BasicDataset(alg, ulb_data, ulb_targets, num_classes, transform_weak, True, transform_medium, transform_strong, False, data_type='pil')
+    
+    # val_loader = torch.utils.data.DataLoader(val_set, batch_size=args.batch_size, shuffle=False)
+    # eval_data = []
+    # eval_targets = []
+    # for images, labels, _ in val_loader:
+    #     eval_data.extend(images)
+    #     eval_targets.extend(labels)
+    #输出第一个batch
+    print("lb_data[0]: ", lb_dset.data[0])
+    print("lb_targets[0]: ", lb_dset.targets[0])
+    print("ulb_data[0]: ", ulb_dset.data[0])
+    # print("eval_data[0]: ", eval_data[0])
+    # print("eval_targets[0]: ", eval_targets[0])
+    # eval_dset = BasicDataset(alg, eval_data, eval_targets, num_classes, transform_val, False, None, None, False)
 
-    return lb_dset, ulb_dset, eval_dset
+    return lb_dset, ulb_dset, val_set

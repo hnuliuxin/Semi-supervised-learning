@@ -27,6 +27,7 @@ def get_cifar(args, alg, name, num_labels, num_classes, data_dir='./data', inclu
     dset = getattr(torchvision.datasets, name.upper())
     dset = dset(data_dir, train=True, download=True)
     data, targets = dset.data, dset.targets
+    print("data.shape: ", data.shape)
     crop_size = args.img_size
     crop_ratio = args.crop_ratio
 
@@ -118,8 +119,8 @@ def get_cifar(args, alg, name, num_labels, num_classes, data_dir='./data', inclu
     eval_dset = BasicDataset(alg, test_data, test_targets, num_classes, transform_val, False, None, None, False)
 
 
-    #输出第一个batch
-    print("lb_data[0]: ", lb_dset.data[0])
-    print("lb_targets[0]: ", lb_dset.targets[0])
-    print("ulb_data[0]: ", ulb_dset.data[0])
+    # #输出第一个batch
+    # print("lb_data[0]: ", lb_dset.data[0].shape)
+    # print("lb_targets[0]: ", lb_dset.targets[0])
+    # print("ulb_data[0]: ", ulb_dset.data[0].shape)
     return lb_dset, ulb_dset, eval_dset
