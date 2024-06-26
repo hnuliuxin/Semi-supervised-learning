@@ -27,7 +27,6 @@ def get_cifar(args, alg, name, num_labels, num_classes, data_dir='./data', inclu
     dset = getattr(torchvision.datasets, name.upper())
     dset = dset(data_dir, train=True, download=True)
     data, targets = dset.data, dset.targets
-    print("data.shape: ", data.shape)
     crop_size = args.img_size
     crop_ratio = args.crop_ratio
 

@@ -67,7 +67,7 @@ class ShuffleNet(nn.Module):
         self.layer2 = self._make_layer(out_planes[1], num_blocks[1], groups)
         self.layer3 = self._make_layer(out_planes[2], num_blocks[2], groups)
         self.feat_dim = out_planes[2]
-        self.linear = nn.Linear(out_planes[2], num_classes)
+        self.classifier = nn.Linear(out_planes[2], num_classes)
 
     def _make_layer(self, out_planes, num_blocks, groups):
         layers = []
@@ -93,27 +93,21 @@ class ShuffleNet(nn.Module):
     def get_bn_before_relu(self):
         raise NotImplementedError('ShuffleNet currently is not supported for "Overhaul" teacher')
 
-    def forward(self, x, is_feat=False, preact=False):
+    def forward(self, x, only_fc=False, only_feat=False, **kwargs):
+        if only_fc:
+            return self.classifier(x)
         out = F.relu(self.bn1(self.conv1(x)))
-        f0 = out
-        out, f1_pre = self.layer1(out)
-        f1 = out
-        out, f2_pre = self.layer2(out)
-        f2 = out
-        out, f3_pre = self.layer3(out)
-        f3 = out
+        out, _ = self.layer1(out)
+        out, _ = self.layer2(out)
+        out, _ = self.layer3(out)
         out = F.avg_pool2d(out, 4)
         out = out.view(out.size(0), -1)
-        f4 = out
-        out = self.linear(out)
-
-        if is_feat:
-            if preact:
-                return [f0, f1_pre, f2_pre, f3_pre, f4], out
-            else:
-                return [f0, f1, f2, f3, f4], out
-        else:
+        if only_feat:
             return out
+        output = self.classifier(out)
+        result_dict = {'logits': output, 'feat': out}
+        return result_dict
+        
 
 
 def ShuffleV1(pretrained=False, pretrained_path=None, **kwargs):

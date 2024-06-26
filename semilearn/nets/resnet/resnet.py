@@ -181,29 +181,26 @@ class ResNet(nn.Module):
     def get_stage_channels(self):
         return self.stage_channels
 
-    def forward(self, x):
+    def forward(self, x, only_fc=False, only_feat=False, **kwargs):
+        if only_fc:
+            return self.fc(x)
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)  # 32x32
-        f0 = x
 
-        x, f1_pre = self.layer1(x)  # 32x32
-        f1 = x
-        x, f2_pre = self.layer2(x)  # 16x16
-        f2 = x
-        x, f3_pre = self.layer3(x)  # 8x8
-        f3 = x
+        x, _ = self.layer1(x)  # 32x32
+        x, _ = self.layer2(x)  # 16x16
+        x, _ = self.layer3(x)  # 8x8
 
         x = self.avgpool(x)
-        avg = x.reshape(x.size(0), -1)
+        avg = x.view(x.size(0), -1)
+        if only_feat:
+            return avg
         out = self.fc(avg)
 
-        feats = {}
-        feats["feats"] = [f0, f1, f2, f3]
-        feats["preact_feats"] = [f0, f1_pre, f2_pre, f3_pre]
-        feats["pooled_feat"] = avg
+        result_dict = {"logits": out, "feat": avg}
 
-        return out, feats
+        return result_dict
 
 
 def resnet8(pretrained=False, pretrained_model_path=None, **kwargs):

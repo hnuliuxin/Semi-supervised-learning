@@ -116,7 +116,7 @@ class ShuffleNetV2(nn.Module):
         self.conv2 = nn.Conv2d(out_channels[2], out_channels[3],
                                kernel_size=1, stride=1, padding=0, bias=False)
         self.bn2 = nn.BatchNorm2d(out_channels[3])
-        self.linear = nn.Linear(out_channels[3], num_classes)
+        self.classifier = nn.Linear(out_channels[3], num_classes)
 
     def _make_layer(self, out_channels, num_blocks):
         layers = [DownBlock(self.in_channels, out_channels)]
@@ -137,30 +137,23 @@ class ShuffleNetV2(nn.Module):
     def get_bn_before_relu(self):
         raise NotImplementedError('ShuffleNetV2 currently is not supported for "Overhaul" teacher')
 
-    def forward(self, x, is_feat=False, preact=False):
+    def forward(self, x, only_fc=False, only_feat=False, **kwargs):
+        if only_fc:
+            return self.classifier(x)
         out = F.relu(self.bn1(self.conv1(x)))
         # out = F.max_pool2d(out, 3, stride=2, padding=1)
-        f0 = out
-        out, f1_pre = self.layer1(out)
-        f1 = out
-        out, f2_pre = self.layer2(out)
-        f2 = out
-        out, f3_pre = self.layer3(out)
-        f3 = out
+        out, _ = self.layer1(out)
+        out, _ = self.layer2(out)
+        out, _ = self.layer3(out)
         out = F.relu(self.bn2(self.conv2(out)))
-        f3 = out
         out = F.avg_pool2d(out, 4)
         out = out.view(out.size(0), -1)
-        f4 = out
-        out = self.linear(out)
-        if is_feat:
-            if preact:
-                return [f0, f1_pre, f2_pre, f3_pre, f4], out
-            else:
-                return [f0, f1, f2, f3, f4], out
-        else:
+        if only_feat:
             return out
-
+        output = self.classifier(out)
+        
+        result_dict = {'logits': output, 'feat': out}
+        return result_dict
 
 configs = {
     0.2: {
