@@ -409,5 +409,5 @@ if __name__ == "__main__":
     args.dist_url = "tcp://127.0.0.1:" + str(port)
     main(args)
 
-# python eval.py --dataset cifar100 --num_classes 100 --load_path /PATH/TO/CHECKPOINT
+# python eval.py --dataset cifar100 --num_classes 100 --net Net --load_path /PATH/TO/CHECKPOINT
 # python train.py --c config/usb_cv/fixmatch/fixmatch_cifar100_200_0.yaml

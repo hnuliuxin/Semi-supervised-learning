@@ -59,8 +59,8 @@ def get_tiny_imagenet(args, alg, name, num_labels, num_classes, data_dir='./data
     
 
     data, targets = train_set.samples, train_set.targets
-    print("data: ", data[0])
-    print("targets: ", targets[0])
+    # print("data: ", data[0])
+    # print("targets: ", targets[0])
 
     crop_size = args.img_size
     crop_ratio = args.crop_ratio
@@ -130,9 +130,9 @@ def get_tiny_imagenet(args, alg, name, num_labels, num_classes, data_dir='./data
     #     eval_data.extend(images)
     #     eval_targets.extend(labels)
     #输出第一个batch
-    print("lb_data[0]: ", lb_dset.data[0])
-    print("lb_targets[0]: ", lb_dset.targets[0])
-    print("ulb_data[0]: ", ulb_dset.data[0])
+    # print("lb_data[0]: ", lb_dset.data[0])
+    # print("lb_targets[0]: ", lb_dset.targets[0])
+    # print("ulb_data[0]: ", ulb_dset.data[0])
     # print("eval_data[0]: ", eval_data[0])
     # print("eval_targets[0]: ", eval_targets[0])
     # eval_dset = BasicDataset(alg, eval_data, eval_targets, num_classes, transform_val, False, None, None, False)

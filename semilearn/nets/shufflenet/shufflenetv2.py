@@ -186,7 +186,7 @@ configs = {
 }
 
 
-def ShuffleV2(pretrained=False, pretrained_path=None, **kwargs):
+def shuffleV2(pretrained=False, pretrained_path=None, **kwargs):
     model = ShuffleNetV2(net_size=1, **kwargs)
     if pretrained:
         model = load_checkpoint(model, pretrained_path)

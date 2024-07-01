@@ -1,2 +1,2 @@
-from .shufflenetv1 import ShuffleV1
-from .shufflenetv2 import ShuffleV2
+from .shufflenetv1 import shuffleV1
+from .shufflenetv2 import shuffleV2

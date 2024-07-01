@@ -110,7 +110,7 @@ class ShuffleNet(nn.Module):
         
 
 
-def ShuffleV1(pretrained=False, pretrained_path=None, **kwargs):
+def shuffleV1(pretrained=False, pretrained_path=None, **kwargs):
     cfg = {
         'out_planes': [240, 480, 960],
         'num_blocks': [4, 8, 4],

@@ -32,7 +32,6 @@ def create_ossl_cv_config(
     alg,
     seed,
     dataset,
-    ood_dataset,
     net,
     num_classes,
     num_labels,
@@ -270,7 +269,7 @@ def exp_OSSL_cv(label_amount):
         "wrn_16_1",
         "wrn_40_1",
         "mobilenet",
-        "shufflev2",
+        "shuffleV2",
         "vgg8"
     ]
 
@@ -290,7 +289,6 @@ def exp_OSSL_cv(label_amount):
     # lr = 5e-5
     warmup = 0
     amp = False
-    ood_dataset = None
 
     for alg in algs:
         for dataset in datasets:
@@ -313,17 +311,12 @@ def exp_OSSL_cv(label_amount):
 
                         lr = 5e-4
                         layer_decay = 0.5
-                        if dataset[-1] == '5':
-                            ood_dataset = "places365"
-                        elif dataset[-1] == 't':
-                            ood_dataset = "tiny_imagenet"
                     
                     port = dist_port[count]
                     cfg = create_ossl_cv_config(
                         alg,
                         seed,
                         dataset,
-                        ood_dataset,
                         net,
                         num_classes,
                         num_labels,

@@ -8,5 +8,5 @@ from .bert import bert_base_cased, bert_base_uncased
 from .wave2vecv2 import wave2vecv2_base
 from .hubert import hubert_base
 from .mobilenet import mobilenet
-from .shufflenet import ShuffleV1, ShuffleV2
+from .shufflenet import shuffleV1, shuffleV2
 from .vgg import vgg8, vgg11, vgg13, vgg16, vgg19
