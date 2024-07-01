@@ -203,80 +203,80 @@ class ResNet(nn.Module):
         return result_dict
 
 
-def resnet8(pretrained=False, pretrained_model_path=None, **kwargs):
+def resnet8(pretrained=False, pretrained_path=None, **kwargs):
     model_kwargs = dict(depth=8, num_filters=[16, 16, 32, 64], block_name="basicblock", **kwargs)
     model = ResNet(**model_kwargs)
     if pretrained:
-        model = load_checkpoint(model, pretrained_model_path)
+        model = load_checkpoint(model, pretrained_path)
     return model
 
 
-def resnet14(pretrained=False, pretrained_model_path=None, **kwargs):
+def resnet14(pretrained=False, pretrained_path=None, **kwargs):
     model_kwargs = dict(depth=14, num_filters=[16, 16, 32, 64], block_name="basicblock", **kwargs)
     model = ResNet(**model_kwargs)
     if pretrained:
-        model = load_checkpoint(model, pretrained_model_path)
+        model = load_checkpoint(model, pretrained_path)
     return model
 
 
-def resnet20(pretrained=False, pretrained_model_path=None, **kwargs):
+def resnet20(pretrained=False, pretrained_path=None, **kwargs):
     model_kwargs = dict(depth=20, num_filters=[16, 16, 32, 64], block_name="basicblock", **kwargs)
     model = ResNet(**model_kwargs)
     if pretrained:
-        model = load_checkpoint(model, pretrained_model_path)
+        model = load_checkpoint(model, pretrained_path)
     return model
 
 
-def resnet32(pretrained=False, pretrained_model_path=None, **kwargs):
+def resnet32(pretrained=False, pretrained_path=None, **kwargs):
     model_kwargs = dict(depth=32, num_filters=[16, 16, 32, 64], block_name="basicblock", **kwargs)
     model = ResNet(**model_kwargs)
     if pretrained:
-        model = load_checkpoint(model, pretrained_model_path)
+        model = load_checkpoint(model, pretrained_path)
     return model
 
 
-def resnet44(pretrained=False, pretrained_model_path=None, **kwargs):
+def resnet44(pretrained=False, pretrained_path=None, **kwargs):
     model_kwargs = dict(depth=44, num_filters=[16, 16, 32, 64], block_name="basicblock", **kwargs)
     model = ResNet(**model_kwargs)
     if pretrained:
-        model = load_checkpoint(model, pretrained_model_path)
+        model = load_checkpoint(model, pretrained_path)
     return model
 
 
-def resnet56(pretrained=False, pretrained_model_path=None, **kwargs):
+def resnet56(pretrained=False, pretrained_path=None, **kwargs):
     model_kwargs = dict(depth=56, num_filters=[16, 16, 32, 64], block_name="basicblock", **kwargs)
     model = ResNet(**model_kwargs)
     if pretrained:
-        model = load_checkpoint(model, pretrained_model_path)
+        model = load_checkpoint(model, pretrained_path)
     return model
 
 
-def resnet110(pretrained=False, pretrained_model_path=None, **kwargs):
+def resnet110(pretrained=False, pretrained_path=None, **kwargs):
     model_kwargs = dict(depth=110, num_filters=[16, 16, 32, 64], block_name="basicblock", **kwargs)
     model = ResNet(**model_kwargs)
     if pretrained:
-        model = load_checkpoint(model, pretrained_model_path)
+        model = load_checkpoint(model, pretrained_path)
     return model
 
 
-def resnet8x4(pretrained=False, pretrained_model_path=None, **kwargs):
+def resnet8x4(pretrained=False, pretrained_path=None, **kwargs):
     model_kwargs = dict(depth=8, num_filters=[64, 64, 128, 256], block_name="basicblock", **kwargs)
     model = ResNet(**model_kwargs)
     if pretrained:
-        model = load_checkpoint(model, pretrained_model_path)
+        model = load_checkpoint(model, pretrained_path)
     return model
 
 
-def resnet32x4(pretrained=False, pretrained_model_path=None, **kwargs):
+def resnet32x4(pretrained=False, pretrained_path=None, **kwargs):
     model_kwargs = dict(depth=32, num_filters=[64, 64, 128, 256], block_name="basicblock", **kwargs)
     model = ResNet(**model_kwargs)
     if pretrained:
-        model = load_checkpoint(model, pretrained_model_path)
+        model = load_checkpoint(model, pretrained_path)
     return model
 
-def resnet50(pretrained=False, pretrained_model_path=None, **kwargs):
+def resnet50(pretrained=False, pretrained_path=None, **kwargs):
     model_kwargs = dict(depth=50, num_filters=[64, 128, 256, 512], block_name="bottleneck", **kwargs)
     model = ResNet(**model_kwargs)
     if pretrained:
-        model = load_checkpoint(model, pretrained_model_path)
+        model = load_checkpoint(model, pretrained_path)
     return model
