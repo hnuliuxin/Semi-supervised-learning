@@ -48,7 +48,7 @@ mean, std = {}, {}
 mean['tiny_imagenet'] = [0.4802, 0.4481, 0.3975]
 std['tiny_imagenet'] = [0.2770, 0.2691, 0.2821]
 
-def get_tiny_imagenet(args, alg, name, num_labels, num_classes, data_dir='./data', include_lb_to_ulb=True):
+def get_tiny_imagenet(args, alg, name, num_labels, num_classes, data_dir='./data', include_lb_to_ulb=True, is_all_ulb=False):
     data_dir = os.path.join(data_dir, name.lower())
     train_path = os.path.join(data_dir, 'train')
     val_path = os.path.join(data_dir, 'val')
@@ -97,6 +97,11 @@ def get_tiny_imagenet(args, alg, name, num_labels, num_classes, data_dir='./data
         transforms.Normalize(mean[name], std[name],)
     ])
     
+    #TODO 是否需要transform
+    if is_all_ulb:
+        lb_dset = BasicDataset(alg, data, None, num_classes, transform_weak, True, transform_medium, transform_strong, False, data_type='pil')
+        return lb_dset, None, None
+
     lb_data, lb_targets, ulb_data, ulb_targets = split_ssl_data(args, data, targets, num_classes,
                                                                 lb_num_labels=num_labels,
                                                                 ulb_num_labels=args.ulb_num_labels,

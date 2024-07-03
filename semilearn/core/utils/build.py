@@ -70,7 +70,7 @@ def get_dataset(args, algorithm, dataset, num_labels, num_classes, data_dir='./d
         data_dir: data folder
         include_lb_to_ulb: flag of including labeled data into unlabeled data
     """
-    from semilearn.datasets import get_eurosat, get_medmnist, get_semi_aves, get_cifar, get_svhn, get_stl10, get_imagenet, get_json_dset, get_pkl_dset, get_tiny_imagenet
+    from semilearn.datasets import get_eurosat, get_medmnist, get_semi_aves, get_cifar, get_svhn, get_stl10, get_imagenet, get_json_dset, get_pkl_dset, get_tiny_imagenet, get_places365
 
     # 在此处添加新的数据集
     if dataset == "eurosat":
@@ -78,6 +78,14 @@ def get_dataset(args, algorithm, dataset, num_labels, num_classes, data_dir='./d
         test_dset = None
     elif dataset == "tiny_imagenet":
         lb_dset, ulb_dset, eval_dset = get_tiny_imagenet(args, algorithm, dataset, num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)
+        test_dset = None
+    elif dataset == "cifar100_with_tiny_imagenet":
+        lb_dset, _, eval_dset = get_cifar(args, algorithm, "cifar100", num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)
+        ulb_dset, _, _ = get_tiny_imagenet(args, algorithm, "tiny_imagenet", num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb, is_all_ulb=True)
+        test_dset = None
+    elif dataset == "cifar100_with_places365":
+        lb_dset, _, eval_dset = get_cifar(args, algorithm, "cifar100", num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)
+        ulb_dset, _, _ = get_places365(args, algorithm, "places365", num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb, is_all_ulb=True)
         test_dset = None
     # TODO 添加开集半监督数据集，cifar100_with_tiny_imagenet等
     elif dataset in ["tissuemnist"]:
