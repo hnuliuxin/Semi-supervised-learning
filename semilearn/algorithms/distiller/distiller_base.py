@@ -24,5 +24,6 @@ class DistillerBase(AlgorithmBase):
         # teacher model init
         self.teacher_net_builder = teacher_net_builder
         self.teacher_model = self.teacher_net_builder(num_classes=self.num_classes, pretrained=self.args.use_pretrain, pretrained_path=self.args.pretrain_path)
-        
+    def train_step(self, idx_lb, x_lb, y_lb, idx_ulb, x_ulb_w, x_ulb_s):
+        print("DistillerBase train_step")
     
