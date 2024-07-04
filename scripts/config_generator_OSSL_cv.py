@@ -264,7 +264,7 @@ def exp_OSSL_cv(label_amount):
 
     nets = [
         "resnet8x4",
-        "resnet18"
+        "resnet18",
         "vit_tiny_patch2_32",
         "wrn_16_1",
         "wrn_40_1",
@@ -276,7 +276,8 @@ def exp_OSSL_cv(label_amount):
     datasets = [
         "cifar100_with_tiny_imagenet",
         "cifar100_with_places365", 
-        "cifar100", "tiny_imagenet", 
+        "cifar100", 
+        "tiny_imagenet", 
         "cifar100_and_tiny_imagenet", 
         "cifar100_and_places365"
     ]
@@ -337,7 +338,7 @@ if __name__ == "__main__":
         os.makedirs("./saved_models/ossl_cv/", exist_ok=True)
     if not os.path.exists("./config/ossl_cv/"):
         os.makedirs("./config/ossl_cv/", exist_ok=True)
-    label_amount = {"s": [2, 2], "m": [4, 4]}
+    label_amount = {"s": [2, 2], "m": [4, 4], "l":[25, 25]}
     for i in label_amount:
         exp_OSSL_cv(label_amount=label_amount[i])
 
