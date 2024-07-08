@@ -274,6 +274,13 @@ def resnet32x4(pretrained=False, pretrained_path=None, **kwargs):
         model = load_checkpoint(model, pretrained_path)
     return model
 
+def resnet18(pretrained=False, pretrained_path=None, **kwargs):
+    model_kwargs = dict(depth=18, num_filters=[64, 64, 128, 256], block_name="basicblock", **kwargs)
+    model = ResNet(**model_kwargs)
+    if pretrained:
+        model = load_checkpoint(model, pretrained_path)
+    return model
+
 def resnet50(pretrained=False, pretrained_path=None, **kwargs):
     model_kwargs = dict(depth=50, num_filters=[64, 128, 256, 512], block_name="bottleneck", **kwargs)
     model = ResNet(**model_kwargs)
