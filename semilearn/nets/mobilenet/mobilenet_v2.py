@@ -140,23 +140,27 @@ class MobileNetV2(nn.Module):
             return self.classifier(x)
 
         out = self.conv1(x)
-
+        f0 = out
         out = self.blocks[0](out)
         out = self.blocks[1](out)
+        f1 = out
         out = self.blocks[2](out)
+        f2 = out
         out = self.blocks[3](out)
         out = self.blocks[4](out)
+        f3 = out
         out = self.blocks[5](out)
         out = self.blocks[6](out)
-
         out = self.conv2(out)
+        f4 = out
         if not self.remove_avg:
             out = self.avgpool(out)
         out = out.view(out.size(0), -1)
+        f5 = out
         if only_feat:
-            return out
+            return [f0, f1, f2, f3, f4, f5]
         output = self.classifier(out)
-        result_dict = {'logits': output, 'feat': out}
+        result_dict = {'logits': output, 'feat': [f0, f1, f2, f3, f4, f5]}
         return result_dict
 
     def _initialize_weights(self):

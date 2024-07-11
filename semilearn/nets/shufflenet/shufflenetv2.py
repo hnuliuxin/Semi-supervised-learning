@@ -141,18 +141,23 @@ class ShuffleNetV2(nn.Module):
         if only_fc:
             return self.classifier(x)
         out = F.relu(self.bn1(self.conv1(x)))
-        # out = F.max_pool2d(out, 3, stride=2, padding=1)
-        out, _ = self.layer1(out)
-        out, _ = self.layer2(out)
-        out, _ = self.layer3(out)
+        f0 = out
+        out, f1_pre = self.layer1(out)
+        f1 = out
+        out, f2_pre = self.layer2(out)
+        f2 = out
+        out, f3_pre = self.layer3(out)
+        f3 = out
         out = F.relu(self.bn2(self.conv2(out)))
+        f3 = out
         out = F.avg_pool2d(out, 4)
         out = out.view(out.size(0), -1)
+        f4 = out
         if only_feat:
-            return out
+            return [f0, f1, f2, f3, f4]
         output = self.classifier(out)
         
-        result_dict = {'logits': output, 'feat': out}
+        result_dict = {'logits': output, 'feat': [f0, f1, f2, f3, f4]}
         return result_dict
 
 configs = {

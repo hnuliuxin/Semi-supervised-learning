@@ -187,18 +187,21 @@ class ResNet(nn.Module):
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)  # 32x32
-
+        f0 = x
         x, _ = self.layer1(x)  # 32x32
+        f1 = x
         x, _ = self.layer2(x)  # 16x16
+        f2 = x
         x, _ = self.layer3(x)  # 8x8
-
+        f3 = x
         x = self.avgpool(x)
-        avg = x.view(x.size(0), -1)
+        x = x.view(x.size(0), -1)
+        f4 = x
         if only_feat:
-            return avg
-        out = self.fc(avg)
+            return [f0, f1, f2, f3, f4]
+        out = self.fc(x)
 
-        result_dict = {"logits": out, "feat": avg}
+        result_dict = {"logits": out, "feat": [f0, f1, f2, f3, f4]}
 
         return result_dict
 
