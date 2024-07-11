@@ -73,28 +73,38 @@ class VGG(nn.Module):
             return self.classifier(x)
         h = x.shape[2]
         x = F.relu(self.block0(x))
+        f0 = x
         x = self.pool0(x)
         x = self.block1(x)
+        f1_pre = x
         x = F.relu(x)
+        f1 = x
         x = self.pool1(x)
         x = self.block2(x)
+        f2_pre = x
         x = F.relu(x)
+        f2 = x
         x = self.pool2(x)
         x = self.block3(x)
+        f3_pre = x
         x = F.relu(x)
+        f3 = x
         if h == 64:
             x = self.pool3(x)
         x = self.block4(x)
+        f4_pre = x
         x = F.relu(x)
+        f4 = x
         x = self.pool4(x)
         x = x.view(x.size(0), -1)
+        f5 = x
 
         if only_feat:
-            return x
+            return [f0, f1, f2, f3, f4, f5]
         output = self.classifier(x)
 
         
-        result_dict = {"logits": output, "feat": x}
+        result_dict = {"logits": output, "feat": [f0, f1, f2, f3, f4, f5]}
         return result_dict
 
     @staticmethod
