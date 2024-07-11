@@ -1,10 +1,11 @@
 import os
 
 def create_configuration(cfg, cfg_file):
-    cfg["save_name"] = "{alg}_{dataset}_{num_lb}_{net}_{seed}".format(
+    cfg["save_name"] = "{alg}_{dataset}_{num_lb}_{ne1}_{net}_{seed}".format(
         alg=cfg["algorithm"],
         dataset=cfg["dataset"],
         num_lb=cfg["num_labels"],
+        ne1=cfg["net_teacher"],
         net=cfg["net"],
         seed=cfg["seed"],
     )
@@ -132,8 +133,8 @@ def create_ossl_cv_config(
     return cfg
 
 def exp_OSKD_cv(label_amount):
-    config_file = r"./config/OSSL_cv/"
-    save_path = r"./saved_models/OSSL_cv"
+    config_file = r"./config/OSKD_cv/"
+    save_path = r"./saved_models/OSKD_cv"
 
     if not os.path.exists(config_file):
         os.mkdir(config_file)
@@ -219,11 +220,11 @@ def exp_OSKD_cv(label_amount):
                     create_configuration(cfg, config_file)
 
 if __name__ == "__main__":
-    if not os.path.exists("./saved_models/oskd_cv/"):
-        os.makedirs("./saved_models/oskd_cv/", exist_ok=True)
-    if not os.path.exists("./config/oskd_cv/"):
-        os.makedirs("./config/oskd_cv/", exist_ok=True)
-    label_amount = {"s": [2, 2], "m": [4, 4], "l":[25, 25]}
+    if not os.path.exists("./saved_models/OSKD_cv/"):
+        os.makedirs("./saved_models/OSKD_cv/", exist_ok=True)
+    if not os.path.exists("./config/OSKD_cv/"):
+        os.makedirs("./config/OSKD_cv/", exist_ok=True)
+    label_amount = {"s": [2, 2], "m": [4, 4], "l":[25, 25], "full":[500, 500]}
     for i in label_amount:
         exp_OSKD_cv(label_amount=label_amount[i])
 

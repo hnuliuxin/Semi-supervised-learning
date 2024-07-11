@@ -59,7 +59,7 @@ class KD(DistillerBase):
             outs_x_unlb_teacher = self.teacher_model(x_ulb_w)
             logits_x_unlb_teacher = outs_x_unlb_teacher['logits']
 
-            feat_dict = {'x_lb': outs_x_lb['feat'], 'x_ulb_w': outs_x_unlb['feat']}
+            feat_dict = {'x_lb': outs_x_lb['feat'][-1], 'x_ulb_w': outs_x_unlb['feat'][-1]}
 
             sup_loss = self.ce_loss(logits_x_lb, y_lb, reduction='mean')
             kd_loss = KD_Loss(logits_x_lb, logits_x_lb_teacher, self.T)
