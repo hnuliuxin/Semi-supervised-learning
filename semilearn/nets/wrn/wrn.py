@@ -126,24 +126,25 @@ class WideResNet(nn.Module):
         if only_fc:
             return self.classifier(x)
         
-        out = self.extract(x)
-        out = F.adaptive_avg_pool2d(out, 1)
-        out = out.view(-1, self.channels)
-
-        if only_feat:
-            return out
-        
-        output = self.classifier(out)
-        result_dict = {'logits':output, 'feat':out}
-        return result_dict
-
-    def extract(self, x):
         out = self.conv1(x)
+        f0 = out
         out = self.block1(out)
+        f1 = out
         out = self.block2(out)
+        f2 = out
         out = self.block3(out)
         out = self.relu(self.bn1(out))
-        return out
+        f3 = out
+        out = F.adaptive_avg_pool2d(out, 1)
+        out = out.view(-1, self.channels)
+        f4 = out
+        if only_feat:
+            return [f0, f1, f2, f3, f4]
+        
+        output = self.classifier(out)
+        result_dict = {'logits':output, 'feat':[f0, f1, f2, f3, f4]}
+        return result_dict
+
 
     def group_matcher(self, coarse=False, prefix=''):
         matcher = dict(stem=r'^{}conv1'.format(prefix), blocks=r'^{}block(\d+)'.format(prefix) if coarse else r'^{}block(\d+)\.layer.(\d+)'.format(prefix))
