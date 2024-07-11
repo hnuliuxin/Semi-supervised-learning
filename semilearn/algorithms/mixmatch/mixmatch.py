@@ -52,12 +52,12 @@ class MixMatch(AlgorithmBase):
                 self.bn_controller.freeze_bn(self.model)
                 outs_x_ulb_w1 = self.model(x_ulb_w)
                 logits_x_ulb_w1 = outs_x_ulb_w1['logits']
-                feat_x_ulb_w1 = outs_x_ulb_w1['feat']
+                feat_x_ulb_w1 = outs_x_ulb_w1['feat'][-1]
 
                 # logits_x_ulb_w1 = self.model(x_ulb_w)
                 outs_x_ulb_w2 = self.model(x_ulb_s)
                 logits_x_ulb_w2 = outs_x_ulb_w2['logits']
-                feat_x_ulb_w2 = outs_x_ulb_w2['feat']
+                feat_x_ulb_w2 = outs_x_ulb_w2['feat'][-1]
 
                 # logits_x_ulb_w2 = self.model(x_ulb_s)
                 self.bn_controller.unfreeze_bn(self.model)
@@ -74,7 +74,7 @@ class MixMatch(AlgorithmBase):
             self.bn_controller.freeze_bn(self.model)
             outs_x_lb = self.model(x_lb)
             self.bn_controller.unfreeze_bn(self.model)
-            feats_x_lb = outs_x_lb['feat']
+            feats_x_lb = outs_x_lb['feat'][-1]
             feat_dict = {'x_lb':feats_x_lb, 'x_ulb_w':feat_x_ulb_w1, 'x_ulb_s':feat_x_ulb_w2}
 
             # with torch.no_grad():
@@ -82,7 +82,7 @@ class MixMatch(AlgorithmBase):
             input_labels = torch.cat([F.one_hot(y_lb, self.num_classes), sharpen_prob_x_ulb, sharpen_prob_x_ulb], dim=0)
             # Mix up
             if self.mixup_manifold:
-                inputs = torch.cat((outs_x_lb['feat'], outs_x_ulb_w1['feat'], outs_x_ulb_w2['feat']))
+                inputs = torch.cat((outs_x_lb['feat'][-1], outs_x_ulb_w1['feat'][-1], outs_x_ulb_w2['feat'][-1]))
             else:
                 inputs = torch.cat([x_lb, x_ulb_w, x_ulb_s])
             mixed_x, mixed_y, _ = mixup_one_target(inputs, input_labels,

@@ -47,13 +47,13 @@ class PseudoLabel(AlgorithmBase):
 
             outs_x_lb = self.model(x_lb)
             logits_x_lb = outs_x_lb['logits']
-            feats_x_lb = outs_x_lb['feat']
+            feats_x_lb = outs_x_lb['feat'][-1]
 
             # calculate BN only for the first batch
             self.bn_controller.freeze_bn(self.model)
             outs_x_ulb = self.model(x_ulb_w)
             logits_x_ulb = outs_x_ulb['logits']
-            feats_x_ulb = outs_x_ulb['feat']
+            feats_x_ulb = outs_x_ulb['feat'][-1]
             self.bn_controller.unfreeze_bn(self.model)
 
             feat_dict = {'x_lb': feats_x_lb, 'x_ulb_w': feats_x_ulb}

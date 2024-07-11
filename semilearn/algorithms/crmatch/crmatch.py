@@ -234,7 +234,7 @@ class CRMatch(AlgorithmBase):
                 else:
                     inputs = torch.cat((x_lb, x_ulb_w, x_ulb_s), dim=0).contiguous()
                 outputs = self.model(inputs)
-                logits, logits_rot, logits_ds, feats = outputs['logits'], outputs['logits_rot'], outputs['logits_ds'], outputs['feat']
+                logits, logits_rot, logits_ds, feats = outputs['logits'], outputs['logits_rot'], outputs['logits_ds'], outputs['feat'][-1]
                 logits_x_lb = logits[:num_lb]
                 feats_x_lb = feats[:num_lb]
                 logits_x_ulb_w, logits_x_ulb_s = logits[num_lb:num_lb + 2 * num_ulb].chunk(2)
@@ -243,15 +243,15 @@ class CRMatch(AlgorithmBase):
             else:
                 outs_x_lb = self.model(x_lb)
                 logits_x_lb = outs_x_lb['logits']
-                feats_x_lb = outs_x_lb['feat']
+                feats_x_lb = outs_x_lb['feat'][-1]
                 # logits_x_lb, _, _ = self.model(x_lb)
                 
                 outs_x_ulb_s = self.model(x_ulb_s)
-                logits_x_ulb_s,logits_ds_s,feats_x_ulb_s = outs_x_ulb_s['logits'], outs_x_ulb_s['logits_ds'], outs_x_ulb_s['feat']
+                logits_x_ulb_s,logits_ds_s,feats_x_ulb_s = outs_x_ulb_s['logits'], outs_x_ulb_s['logits_ds'], outs_x_ulb_s['feat'][-1]
                 # logits_x_ulb_s, _, logits_ds_s = self.model(x_ulb_s)
                 with torch.no_grad():
                     outs_x_ulb_w = self.model(x_ulb_w)
-                    logits_x_ulb_w, logits_ds_w, feats_x_ulb_w = outs_x_ulb_w['logits'], outs_x_ulb_w['logits_ds'], outs_x_ulb_w['feat']
+                    logits_x_ulb_w, logits_ds_w, feats_x_ulb_w = outs_x_ulb_w['logits'], outs_x_ulb_w['logits_ds'], outs_x_ulb_w['feat'][-1]
             feat_dict = {'x_lb': feats_x_lb, 'x_ulb_w': feats_x_ulb_w, 'x_ulb_s':feats_x_ulb_s}
 
             with torch.no_grad():

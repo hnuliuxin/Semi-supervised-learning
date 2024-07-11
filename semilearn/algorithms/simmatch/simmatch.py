@@ -158,22 +158,22 @@ class SimMatch(AlgorithmBase):
                 # logits_x_ulb_s, feats_x_ulb_s = logits[num_lb:], feats[num_lb:]
                 inputs = torch.cat((x_lb, x_ulb_w, x_ulb_s))
                 outputs = self.model(inputs)
-                logits, feats = outputs['logits'], outputs['feat']
+                logits, feats = outputs['logits'], outputs['feat'][-1]
                 # logits, feats = self.model(inputs)
                 logits_x_lb, ema_feats_x_lb = logits[:num_lb], feats[:num_lb]
                 ema_logits_x_ulb_w, logits_x_ulb_s = logits[num_lb:].chunk(2)
                 ema_feats_x_ulb_w, feats_x_ulb_s = feats[num_lb:].chunk(2)
             else:
                 outs_x_lb = self.model(x_lb)
-                logits_x_lb, ema_feats_x_lb  = outs_x_lb['logits'], outs_x_lb['feat']
+                logits_x_lb, ema_feats_x_lb  = outs_x_lb['logits'], outs_x_lb['feat'][-1]
                 # logits_x_lb, ema_feats_x_lb = self.model(x_lb)
 
                 outs_x_ulb_w = self.model(x_ulb_w)
-                ema_logits_x_ulb_w, ema_feats_x_ulb_w = outs_x_ulb_w['logits'], outs_x_ulb_w['feat']
+                ema_logits_x_ulb_w, ema_feats_x_ulb_w = outs_x_ulb_w['logits'], outs_x_ulb_w['feat'][-1]
                 # ema_logits_x_ulb_w, ema_feats_x_ulb_w = self.model(x_ulb_w)
 
                 outs_x_ulb_s = self.model(x_ulb_s)
-                logits_x_ulb_s, feats_x_ulb_s = outs_x_ulb_s['logits'], outs_x_ulb_s['feat']
+                logits_x_ulb_s, feats_x_ulb_s = outs_x_ulb_s['logits'], outs_x_ulb_s['feat'][-1]
                 # logits_x_ulb_s, feats_x_ulb_s = self.model(x_ulb_s)
 
             sup_loss = self.ce_loss(logits_x_lb, y_lb, reduction='mean')
@@ -182,7 +182,7 @@ class SimMatch(AlgorithmBase):
             with torch.no_grad():
                 # ema teacher model
                 if self.use_ema_teacher:
-                    ema_feats_x_lb = self.model(x_lb)['feat']
+                    ema_feats_x_lb = self.model(x_lb)['feat'][-1]
                 ema_probs_x_ulb_w = F.softmax(ema_logits_x_ulb_w, dim=-1)
                 ema_probs_x_ulb_w = self.call_hook("dist_align", "DistAlignHook", probs_x_ulb=ema_probs_x_ulb_w.detach())
             self.ema.restore()

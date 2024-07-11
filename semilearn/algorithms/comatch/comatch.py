@@ -167,20 +167,20 @@ class CoMatch(AlgorithmBase):
             if self.use_cat:
                 inputs = torch.cat((x_lb, x_ulb_w, x_ulb_s_0, x_ulb_s_1))
                 outputs = self.model(inputs)
-                logits, feats = outputs['logits'], outputs['feat']
+                logits, feats = outputs['logits'], outputs['feat'][-1]
                 logits_x_lb, feats_x_lb = logits[:num_lb], feats[:num_lb]
                 logits_x_ulb_w, logits_x_ulb_s_0, _ = logits[num_lb:].chunk(3)
                 feats_x_ulb_w, feats_x_ulb_s_0, feats_x_ulb_s_1 = feats[num_lb:].chunk(3)
             else:       
                 outs_x_lb = self.model(x_lb)     
-                logits_x_lb, feats_x_lb = outs_x_lb['logits'], outs_x_lb['feat']
+                logits_x_lb, feats_x_lb = outs_x_lb['logits'], outs_x_lb['feat'][-1]
                 outs_x_ulb_s_0 = self.model(x_ulb_s_0)
-                logits_x_ulb_s_0, feats_x_ulb_s_0 = outs_x_ulb_s_0['logits'], outs_x_ulb_s_0['feat']
+                logits_x_ulb_s_0, feats_x_ulb_s_0 = outs_x_ulb_s_0['logits'], outs_x_ulb_s_0['feat'][-1]
                 outs_x_ulb_s_1 = self.model(x_ulb_s_1)
-                feats_x_ulb_s_1 = outs_x_ulb_s_1['feat']
+                feats_x_ulb_s_1 = outs_x_ulb_s_1['feat'][-1]
                 with torch.no_grad():
                     outs_x_ulb_w = self.model(x_ulb_w)
-                    logits_x_ulb_w, feats_x_ulb_w = outs_x_ulb_w['logits'], outs_x_ulb_w['feat']
+                    logits_x_ulb_w, feats_x_ulb_w = outs_x_ulb_w['logits'], outs_x_ulb_w['feat'][-1]
             feat_dict = {'x_lb': feats_x_lb, 'x_ulb_w': feats_x_ulb_w, 'x_ulb_s':[feats_x_ulb_s_0, feats_x_ulb_s_1]}
 
             # supervised loss

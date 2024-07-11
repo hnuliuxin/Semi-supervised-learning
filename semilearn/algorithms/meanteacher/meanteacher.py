@@ -39,21 +39,21 @@ class MeanTeacher(AlgorithmBase):
 
             outs_x_lb = self.model(x_lb)
             logits_x_lb = outs_x_lb['logits']
-            feats_x_lb = outs_x_lb['feat']
+            feats_x_lb = outs_x_lb['feat'][-1]
 
             self.ema.apply_shadow()
             with torch.no_grad():
                 self.bn_controller.freeze_bn(self.model)
                 outs_x_ulb_w = self.model(x_ulb_w)
                 logits_x_ulb_w = outs_x_ulb_w['logits'] # self.model(x_ulb_w)
-                feats_x_ulb_w = outs_x_ulb_w['feat']
+                feats_x_ulb_w = outs_x_ulb_w['feat'][-1]
                 self.bn_controller.unfreeze_bn(self.model)
             self.ema.restore()
 
             self.bn_controller.freeze_bn(self.model)
             outs_x_ulb_s = self.model(x_ulb_s)
             logits_x_ulb_s = outs_x_ulb_s['logits']
-            feats_x_ulb_s = outs_x_ulb_s['feat']
+            feats_x_ulb_s = outs_x_ulb_s['feat'][-1]
             self.bn_controller.unfreeze_bn(self.model)
 
             feat_dict = {'x_lb':feats_x_lb, 'x_ulb_w':feats_x_ulb_w, 'x_ulb_s':feats_x_ulb_s}

@@ -123,7 +123,7 @@ class ReMixMatch(AlgorithmBase):
 
                 outs_x_ulb_w = self.model(x_ulb_w)
                 logits_x_ulb_w = outs_x_ulb_w['logits']
-                feats_x_ulb_w = outs_x_ulb_w['feat']
+                feats_x_ulb_w = outs_x_ulb_w['feat'][-1]
                 # logits_x_ulb_w = self.model(x_ulb_w)
                 # logits_x_ulb_s1 = self.model(x_ulb_s1)[0]
                 # logits_x_ulb_s2 = self.model(x_ulb_s2)[0]
@@ -140,13 +140,13 @@ class ReMixMatch(AlgorithmBase):
             outs_x_ulb_s_1 = self.model(x_ulb_s_1)
             self.bn_controller.unfreeze_bn(self.model)
 
-            feat_dict = {'x_lb':outs_x_lb['feat'], 'x_ulb_w':feats_x_ulb_w, 'x_ulb_s':[outs_x_ulb_s_0['feat'], outs_x_ulb_s_1['feat']]}
+            feat_dict = {'x_lb':outs_x_lb['feat'][-1], 'x_ulb_w':feats_x_ulb_w, 'x_ulb_s':[outs_x_ulb_s_0['feat'][-1], outs_x_ulb_s_1['feat'][-1]]}
 
             # mix up
             # with torch.no_grad():
             input_labels = torch.cat([F.one_hot(y_lb, self.num_classes), sharpen_prob_x_ulb, sharpen_prob_x_ulb, sharpen_prob_x_ulb], dim=0)
             if self.mixup_manifold:
-                inputs = torch.cat([outs_x_lb['feat'], outs_x_ulb_s_0['feat'], outs_x_ulb_s_1['feat'],  outs_x_ulb_w['feat']], dim=0)
+                inputs = torch.cat([outs_x_lb['feat'][-1], outs_x_ulb_s_0['feat'][-1], outs_x_ulb_s_1['feat'][-1],  outs_x_ulb_w['feat'][-1]], dim=0)
             else:
                 inputs = torch.cat([x_lb, x_ulb_s_0, x_ulb_s_1, x_ulb_w])
             mixed_x, mixed_y, _ = mixup_one_target(inputs, input_labels, self.mixup_alpha, is_bias=True)

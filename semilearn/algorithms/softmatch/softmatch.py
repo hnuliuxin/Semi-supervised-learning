@@ -62,19 +62,19 @@ class SoftMatch(AlgorithmBase):
                 outputs = self.model(inputs)
                 logits_x_lb = outputs['logits'][:num_lb]
                 logits_x_ulb_w, logits_x_ulb_s = outputs['logits'][num_lb:].chunk(2)
-                feats_x_lb = outputs['feat'][:num_lb]
-                feats_x_ulb_w, feats_x_ulb_s = outputs['feat'][num_lb:].chunk(2)
+                feats_x_lb = outputs['feat'][-1][:num_lb]
+                feats_x_ulb_w, feats_x_ulb_s = outputs['feat'][-1][num_lb:].chunk(2)
             else:
                 outs_x_lb = self.model(x_lb) 
                 logits_x_lb = outs_x_lb['logits']
-                feats_x_lb = outs_x_lb['feat']
+                feats_x_lb = outs_x_lb['feat'][-1]
                 outs_x_ulb_s = self.model(x_ulb_s)
                 logits_x_ulb_s = outs_x_ulb_s['logits']
-                feats_x_ulb_s = outs_x_ulb_s['feat']
+                feats_x_ulb_s = outs_x_ulb_s['feat'][-1]
                 with torch.no_grad():
                     outs_x_ulb_w = self.model(x_ulb_w)
                     logits_x_ulb_w = outs_x_ulb_w['logits']
-                    feats_x_ulb_w = outs_x_ulb_w['feat']
+                    feats_x_ulb_w = outs_x_ulb_w['feat'][-1]
             feat_dict = {'x_lb':feats_x_lb, 'x_ulb_w':feats_x_ulb_w, 'x_ulb_s':feats_x_ulb_s}
 
 
