@@ -361,6 +361,7 @@ def main_worker(gpu, ngpus_per_node, args):
     logger = get_logger(args.save_name, save_path, logger_level)
     logger.info(f"Use GPU: {args.gpu} for training")
 
+    #TODO 增加老师模型的网络加载
     _net_builder = get_net_builder(args.net, args.net_from_name)
     # optimizer, scheduler, datasets, dataloaders with be set in algorithms
     if args.imb_algorithm is not None:

@@ -18,7 +18,7 @@ if __name__ == "__main__":
     '''
     Backbone Net Configurations
     '''
-    parser.add_argument('--net', type=str, default='wrn_28_2')
+    parser.add_argument('--net', type=str, default='vit_small_patch2_32')
     parser.add_argument('--net_from_name', type=bool, default=False)
 
     '''
@@ -69,7 +69,7 @@ if __name__ == "__main__":
     eval_loader = DataLoader(eval_dset, batch_size=args.batch_size, drop_last=False, shuffle=False, num_workers=4)
     # 查看第一个batch 的类型
     for data in eval_loader:
-        print("eval data type: ", type(data))
+        print(data['y_lb'][:5])
         break
 
     acc = 0.0

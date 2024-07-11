@@ -10,7 +10,6 @@ from semilearn.datasets.augmentation import RandAugment, RandomResizedCropAndInt
 from semilearn.datasets.utils import split_ssl_data
 
 mean, std = {}, {}
-#TODO 均值和标准差值目前还有问题
 mean['places365'] = [0.485, 0.456, 0.406]
 std['places365'] = [0.229, 0.224, 0.225]
 

@@ -41,6 +41,7 @@ class KD(DistillerBase):
         self.T = T
         self.gamma = gamma
         self.alpha = alpha
+        self.beta = beta
 
     def train_step(self, x_lb, y_lb, x_ulb_w):
         with self.amp_cm():

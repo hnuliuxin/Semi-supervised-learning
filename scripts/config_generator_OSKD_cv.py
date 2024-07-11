@@ -78,118 +78,15 @@ def create_ossl_cv_config(
     cfg["uratio"] = 1
     cfg["ema_m"] = 0.0
 
-    if alg == "fixmatch":
-        cfg["hard_label"] = True
-        cfg["T"] = 0.5
-        cfg["p_cutoff"] = 0.95
-        cfg["ulb_loss_ratio"] = 1.0
-        if dataset == "imagenet":
-            cfg["ulb_loss_ratio"] = 10.0
-            cfg["p_cutoff"] = 0.7
-    elif alg == "uda":
-        cfg["tsa_schedule"] = "none"
-        cfg["T"] = 0.4
-        cfg["p_cutoff"] = 0.8
-        cfg["ulb_loss_ratio"] = 1.0
-        if dataset == "imagenet":
-            cfg["ulb_loss_ratio"] = 10.0
-    elif alg == "pseudolabel":
-        cfg["p_cutoff"] = 0.95
-        cfg["ulb_loss_ratio"] = 1.0
-        cfg["unsup_warm_up"] = 0.4
-    elif alg == "mixmatch":
-        cfg["mixup_alpha"] = 0.5
-        cfg["T"] = 0.5
-        cfg["ulb_loss_ratio"] = 10
-        cfg["unsup_warm_up"] = 0.4  # 16000 / 1024 / 1024
-    elif alg == "remixmatch":
-        cfg["mixup_alpha"] = 0.75
-        cfg["T"] = 0.5
-        cfg["kl_loss_ratio"] = 0.5
-        cfg["ulb_loss_ratio"] = 1.5
-        cfg["rot_loss_ratio"] = 0.5
-        cfg["unsup_warm_up"] = 1 / 64
-    elif alg == "crmatch":
-        cfg["hard_label"] = True
-        cfg["p_cutoff"] = 0.95
-        cfg["ulb_loss_ratio"] = 1.0
+    # 算法的配置
+    cfg["T"] = 1
+    cfg["gamma"] = 1
+    cfg["alpha"] = 1
+    cfg["beta"] = 1
 
-    elif alg == "comatch":
-        cfg["hard_label"] = False
-        cfg["p_cutoff"] = 0.95
-        cfg["contrast_p_cutoff"] = 0.8
-        cfg["contrast_loss_ratio"] = 1.0
-        cfg["ulb_loss_ratio"] = 1.0
-        cfg["proj_size"] = 64
-        cfg["queue_batch"] = 32
-        cfg["smoothing_alpha"] = 0.9
-        cfg["T"] = 0.2
-        cfg["da_len"] = 32
-        cfg["ema_m"] = 0.999
-        if dataset == "stl10":
-            cfg["contrast_loss_ratio"] = 5.0
-
-        if dataset == "imagenet":
-            cfg["p_cutoff"] = 0.6
-            cfg["contrast_p_cutoff"] = 0.3
-            cfg["contrast_loss_ratio"] = 10.0
-            cfg["ulb_loss_ratio"] = 10.0
-            cfg["smoothing_alpha"] = 0.9
-            cfg["T"] = 0.1
-            cfg["proj_size"] = 128
-            cfg["queue_batch"] = 128
-
-    elif alg == "simmatch":
-        cfg["p_cutoff"] = 0.95
-        cfg["in_loss_ratio"] = 1.0
-        cfg["ulb_loss_ratio"] = 1.0
-        cfg["proj_size"] = 128
-        cfg["K"] = 256
-        cfg["da_len"] = 32
-        cfg["smoothing_alpha"] = 0.9
-        cfg["ema_m"] = 0.999
-
-        if dataset in ["cifar10", "svhn", "cifar100", "stl10"]:
-            cfg["T"] = 0.1
-        else:
-            cfg["T"] = 0.2
-
-        if dataset == "imagenet":
-            cfg["in_loss_ratio"] = 5.0
-            cfg["ulb_loss_ratio"] = 10.0
-            cfg["T"] = 0.1
-            cfg["p_cutoff"] = 0.7
-            cfg["da_len"] = 256
-            cfg["ema_m"] = 0.999
-
-    elif alg == "meanteacher":
-        cfg["ulb_loss_ratio"] = 50
-        cfg["unsup_warm_up"] = 0.4
-        cfg["ema_m"] = 0.999
-
-    elif alg == "pimodel":
-        cfg["ulb_loss_ratio"] = 10
-
-        cfg["unsup_warm_up"] = 0.4
-    elif alg == "dash":
-        cfg["gamma"] = 1.27
-        cfg["C"] = 1.0001
-        cfg["rho_min"] = 0.05
-        cfg["num_wu_iter"] = 2048
-        cfg["T"] = 0.5
-        cfg["p_cutoff"] = 0.95
-        cfg["ulb_loss_ratio"] = 1.0
-
-    elif alg == "mpl":
-        cfg["tsa_schedule"] = "none"
-        cfg["T"] = 0.7
-        cfg["p_cutoff"] = 0.6
-        cfg["ulb_loss_ratio"] = 8.0
-
-        cfg["teacher_lr"] = 0.03
-        cfg["label_smoothing"] = 0.1
-        cfg["num_uda_warmup_iter"] = 5000
-        cfg["num_stu_wait_iter"] = 3000
+    if alg == "srd":
+        cfg["criterion_kd_weight"] = 10
+    
 
 
     cfg["img_size"] = img_size
@@ -206,7 +103,8 @@ def create_ossl_cv_config(
     cfg["use_cat"] = True
 
     # net config
-    cfg["net"] = net
+    cfg["net_teacher"] = net[0]
+    cfg["net"] = net[1]
     cfg["net_from_name"] = False
 
     # data config
@@ -227,17 +125,13 @@ def create_ossl_cv_config(
     cfg["dist_backend"] = "nccl"
     cfg["gpu"] = None
 
-    if alg == "crmatch" and dataset == "stl10":
-        cfg["multiprocessing_distributed"] = False
-        cfg["gpu"] = 0
-
     # other config
     cfg["overwrite"] = True
     cfg["use_pretrain"] = False
 
     return cfg
 
-def exp_OSSL_cv(label_amount):
+def exp_OSKD_cv(label_amount):
     config_file = r"./config/OSSL_cv/"
     save_path = r"./saved_models/OSSL_cv"
 
@@ -247,34 +141,22 @@ def exp_OSSL_cv(label_amount):
         os.mkdir(save_path)
     
     algs = [
-        "fixmatch",
-        "uda",
-        "pseudolabel",
-        "mixmatch",
-        "remixmatch",
-        "crmatch",
-        "comatch",
-        "simmatch",
-        "meanteacher",
-        "pimodel",
-        "dash",
-        "fullysupervised",
-        "supervised"
+        "kd",
+        "dkd",
+        "crd",
+        "srd"
     ]
 
-    nets = [
-        "resnet8x4",
-        "resnet18",
-        "vit_tiny_patch2_32",
-        "wrn_16_1",
-        "wrn_40_1",
-        "mobilenet",
-        "shuffleV2",
-        "vgg8",
-        "vgg13",
-        "resnet32x4",
-        "wrn_40_2"
-    ]
+    nets = {
+        ["resnet32x4", "resnet8x4"],
+        ["resnet32x4", "shuffleV1"],
+        ["wrn_40_2", "wrn_40_1"],
+        ["wrn_40_4", "wrn_16_2"],
+        ["wrn_40_4", "wrn_16_4"],
+        ["resnet34", "resnet10"],
+        ["resnet50", "resnet18"],
+        ["resnet34", "wrn_16_2"]
+    }
 
     datasets = [
         "cifar100_with_tiny_imagenet",
@@ -337,12 +219,12 @@ def exp_OSSL_cv(label_amount):
                     create_configuration(cfg, config_file)
 
 if __name__ == "__main__":
-    if not os.path.exists("./saved_models/ossl_cv/"):
-        os.makedirs("./saved_models/ossl_cv/", exist_ok=True)
-    if not os.path.exists("./config/ossl_cv/"):
-        os.makedirs("./config/ossl_cv/", exist_ok=True)
+    if not os.path.exists("./saved_models/oskd_cv/"):
+        os.makedirs("./saved_models/oskd_cv/", exist_ok=True)
+    if not os.path.exists("./config/oskd_cv/"):
+        os.makedirs("./config/oskd_cv/", exist_ok=True)
     label_amount = {"s": [2, 2], "m": [4, 4], "l":[25, 25]}
     for i in label_amount:
-        exp_OSSL_cv(label_amount=label_amount[i])
+        exp_OSKD_cv(label_amount=label_amount[i])
 
 

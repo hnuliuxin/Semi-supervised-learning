@@ -6,7 +6,6 @@ MobileNetV2 implementation used in
 import torch
 import torch.nn as nn
 import math
-from semilearn.nets.utils import load_checkpoint
 
 __all__ = ['mobilenetv2_T_w', 'mobile_half']
 
@@ -185,6 +184,10 @@ def mobilenetv2_T_w(**kwargs):
 def mobilenet(pretrained=False, pretrained_path=None, **kwargs):
     model_kwargs = dict(T=6, W=0.5, **kwargs)
     model = mobilenetv2_T_w(**model_kwargs)
-    if pretrained:
-        model = load_checkpoint(model, pretrained_path)
     return model
+
+
+if __name__ == '__main__':
+    model = mobilenet(num_classes=100)
+    num_params = sum(p.numel() for p in model.parameters())
+    print(num_params)
