@@ -68,8 +68,13 @@ class VGG(nn.Module):
     def get_stage_channels(self):
         return self.stage_channels
 
-    def forward(self, x, only_fc=False, only_feat=False, **kwargs):
+    def forward(self, x, only_fc=False, only_feat=False, feat_s=None, **kwargs):
         if only_fc:
+            return self.classifier(x)
+        if feat_s is not None:
+            new_feat = feat_s
+            x = self.pool4(new_feat)
+            x = x.view(x.size(0), -1)
             return self.classifier(x)
         h = x.shape[2]
         x = F.relu(self.block0(x))

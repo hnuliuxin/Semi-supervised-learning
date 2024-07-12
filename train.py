@@ -106,6 +106,7 @@ def get_config():
     Backbone Net Configurations
     """
     parser.add_argument("--net", type=str, default="wrn_28_2")
+    parser.add_argument("--net_teacher", type=str, default=None)
     parser.add_argument("--net_from_name", type=str2bool, default=False)
     parser.add_argument("--use_pretrain", default=False, type=str2bool)
     parser.add_argument("--pretrain_path", default="", type=str)
@@ -361,13 +362,16 @@ def main_worker(gpu, ngpus_per_node, args):
     logger = get_logger(args.save_name, save_path, logger_level)
     logger.info(f"Use GPU: {args.gpu} for training")
 
-    #TODO 增加老师模型的网络加载
+    #增加老师模型的网络加载
+    teacher_net_builder = None
+    if args.net_teacher is not None:
+        teacher_net_builder = get_net_builder(args.net_teacher, args.net_from_name)
     _net_builder = get_net_builder(args.net, args.net_from_name)
     # optimizer, scheduler, datasets, dataloaders with be set in algorithms
     if args.imb_algorithm is not None:
         model = get_imb_algorithm(args, _net_builder, tb_log, logger)
     else:
-        model = get_algorithm(args, _net_builder, tb_log, logger)
+        model = get_algorithm(args, _net_builder, tb_log, logger, teacher_net_builder)
     logger.info(f"Number of Trainable Params: {count_parameters(model.model)}")
 
     # SET Devices for (Distributed) DataParallel

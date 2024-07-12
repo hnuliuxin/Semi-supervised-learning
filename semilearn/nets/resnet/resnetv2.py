@@ -133,29 +133,34 @@ class ResNet(nn.Module):
             self.in_planes = planes * block.expansion
         return nn.Sequential(*layers)
 
-    def forward(self, x, only_fc=False, only_feat=False, **kwargs):
+    def forward(self, x, only_fc=False, only_feat=False, feat_s=None, **kwargs):
         if only_fc:
             return self.linear(x)
+        if feat_s is not None:
+            new_feat = feat_s
+            x = self.avgpool(new_feat)
+            x = x.view(x.size(0), -1)
+            return self.linear(x)
+
+        out = F.relu(self.bn1(self.conv1(x)))
+        f0 = out
+        out, f1_pre = self.layer1(out)
+        f1 = out
+        out, f2_pre = self.layer2(out)
+        f2 = out
+        out, f3_pre = self.layer3(out)
+        f3 = out
+        out, f4_pre = self.layer4(out)
+        f4 = out
+        out = self.avgpool(out)
+        out = out.view(out.size(0), -1)
+        f5 = out
+        out = self.linear(out)
+        if only_feat:
+            return [f0, f1, f2, f3, f4, f5]
         else:
-            out = F.relu(self.bn1(self.conv1(x)))
-            f0 = out
-            out, f1_pre = self.layer1(out)
-            f1 = out
-            out, f2_pre = self.layer2(out)
-            f2 = out
-            out, f3_pre = self.layer3(out)
-            f3 = out
-            out, f4_pre = self.layer4(out)
-            f4 = out
-            out = self.avgpool(out)
-            out = out.view(out.size(0), -1)
-            f5 = out
-            out = self.linear(out)
-            if only_feat:
-                return [f0, f1, f2, f3, f4, f5]
-            else:
-                result_dict = {"logits": out, "feat": [f0, f1, f2, f3, f4, f5]}
-                return result_dict
+            result_dict = {"logits": out, "feat": [f0, f1, f2, f3, f4, f5]}
+            return result_dict
 
     def forward4(self, feat_s=None):
         x = F.avg_pool2d(feat_s,feat_s.size(2))

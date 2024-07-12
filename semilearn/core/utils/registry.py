@@ -61,7 +61,7 @@ def _handle_errors(errors):
     for name, err in errors:
         print("Module {} import failed: {}".format(name, err))
 
-
+# TODO 添加蒸馏算法
 ALL_MODULES = [
     # NOTE: add all algorithms here
     ('semilearn.algorithms', ['adamatch', 'comatch', 'crmatch', 'dash', 'fixmatch', 'flexmatch', 'fullysupervised', 'meanteacher',

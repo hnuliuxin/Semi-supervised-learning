@@ -129,7 +129,7 @@ class MobileNetV2(nn.Module):
         feat_m.append(self.blocks)
         return feat_m
 
-    def forward(self, x, only_fc=False, only_feat=False, **kwargs):
+    def forward(self, x, only_fc=False, only_feat=False, feat_s=None, **kwargs):
         """
         Args:
             x: input tensor, depends on only_fc and only_feat flag
@@ -137,6 +137,11 @@ class MobileNetV2(nn.Module):
             only_feat: only return pooled features
         """
         if only_fc:
+            return self.classifier(x)
+        if feat_s is not None:
+            new_feat = feat_s
+            x = self.avgpool(new_feat)
+            x = x.view(x.size(0), -1)
             return self.classifier(x)
 
         out = self.conv1(x)

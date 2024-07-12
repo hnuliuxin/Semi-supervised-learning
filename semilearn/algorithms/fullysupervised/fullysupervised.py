@@ -21,7 +21,7 @@ class FullySupervised(AlgorithmBase):
             - logger (`logging.Logger`):
                 logger to use
         """
-    def __init__(self, args, net_builder, tb_log=None, logger=None):
+    def __init__(self, args, net_builder, tb_log=None, logger=None, teacher_net_builder=None):
         super().__init__(args, net_builder, tb_log, logger)
 
     def train_step(self, x_lb, y_lb):

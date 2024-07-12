@@ -38,6 +38,7 @@ class AlgorithmBase:
         net_builder,
         tb_log=None,
         logger=None,
+        teacher_net_builder=None,
         **kwargs):
         
         # common arguments
@@ -75,6 +76,8 @@ class AlgorithmBase:
         self.best_eval_acc, self.best_it = 0.0, 0
         self.bn_controller = Bn_Controller()
         self.net_builder = net_builder
+        if teacher_net_builder is not None:
+            self.teacher_net_builder = teacher_net_builder
         self.ema = None
 
         # build dataset
@@ -85,6 +88,8 @@ class AlgorithmBase:
 
         # cv, nlp, speech builder different arguments
         self.model = self.set_model()
+        if teacher_net_builder is not None:
+            self.teacher_model = self.set_teacher_model()
         self.ema_model = self.set_ema_model()
 
         # build optimizer and scheduler
@@ -189,6 +194,13 @@ class AlgorithmBase:
         """
         model = self.net_builder(num_classes=self.num_classes, pretrained=self.args.use_pretrain, pretrained_path=self.args.pretrain_path)
         return model
+
+    def set_teacher_model(self):
+        """
+        initialize teacher model
+        """
+        teacher_model = self.teacher_net_builder(num_classes=self.num_classes, pretrained=self.args.use_pretrain, pretrained_path=self.args.pretrain_path)
+        return teacher_model
 
     def set_ema_model(self):
         """

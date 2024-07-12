@@ -89,6 +89,7 @@ def create_ossl_cv_config(
         cfg["criterion_kd_weight"] = 10
     
 
+    # ulb_loss_ratio没有设置，因为每个算法的都不同。默认为1
 
     cfg["img_size"] = img_size
     cfg["crop_ratio"] = crop_ratio
@@ -148,7 +149,7 @@ def exp_OSKD_cv(label_amount):
         "srd"
     ]
 
-    nets = {
+    nets = [
         ["resnet32x4", "resnet8x4"],
         ["resnet32x4", "shuffleV1"],
         ["wrn_40_2", "wrn_40_1"],
@@ -157,7 +158,7 @@ def exp_OSKD_cv(label_amount):
         ["resnet34", "resnet10"],
         ["resnet50", "resnet18"],
         ["resnet34", "wrn_16_2"]
-    }
+    ]
 
     datasets = [
         "cifar100_with_tiny_imagenet",

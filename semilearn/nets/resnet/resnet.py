@@ -181,8 +181,13 @@ class ResNet(nn.Module):
     def get_stage_channels(self):
         return self.stage_channels
 
-    def forward(self, x, only_fc=False, only_feat=False, **kwargs):
+    def forward(self, x, only_fc=False, only_feat=False, feat_s=None, **kwargs):
         if only_fc:
+            return self.fc(x)
+        if feat_s is not None:
+            new_feat = feat_s
+            x = self.avgpool(new_feat)
+            x = x.view(x.size(0), -1)
             return self.fc(x)
         x = self.conv1(x)
         x = self.bn1(x)
