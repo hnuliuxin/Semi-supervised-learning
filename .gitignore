@@ -1,9 +1,11 @@
 data_statistics/
 data/
+config/
 saved_models/
 pretrained_weights/
 ssl_nlp_datasets/
 back_translate_models/
+
 
 .vscode
 # Byte-compiled / optimized / DLL files

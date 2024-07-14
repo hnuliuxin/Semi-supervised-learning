@@ -28,7 +28,7 @@ def create_configuration(cfg, cfg_file):
             w.writelines(line)
             w.write("\n")
 
-def create_ossl_cv_config(
+def create_OSSL_cv_config(
     alg,
     seed,
     dataset,
@@ -319,7 +319,7 @@ def exp_OSSL_cv(label_amount):
                         layer_decay = 0.5
                     
                     port = dist_port[count]
-                    cfg = create_ossl_cv_config(
+                    cfg = create_OSSL_cv_config(
                         alg,
                         seed,
                         dataset,
@@ -339,10 +339,10 @@ def exp_OSSL_cv(label_amount):
                     create_configuration(cfg, config_file)
 
 if __name__ == "__main__":
-    if not os.path.exists("./saved_models/ossl_cv/"):
-        os.makedirs("./saved_models/ossl_cv/", exist_ok=True)
-    if not os.path.exists("./config/ossl_cv/"):
-        os.makedirs("./config/ossl_cv/", exist_ok=True)
+    if not os.path.exists("./saved_models/OSSL_cv/"):
+        os.makedirs("./saved_models/OSSL_cv/", exist_ok=True)
+    if not os.path.exists("./config/OSSL_cv/"):
+        os.makedirs("./config/OSSL_cv/", exist_ok=True)
     label_amount = {"s": [2, 2], "m": [4, 4], "l":[25, 25]}
     for i in label_amount:
         exp_OSSL_cv(label_amount=label_amount[i])
