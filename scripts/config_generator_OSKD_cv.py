@@ -1,11 +1,11 @@
 import os
 
 def create_configuration(cfg, cfg_file):
-    cfg["save_name"] = "{alg}_{dataset}_{num_lb}_{ne1}_{net}_{seed}".format(
+    cfg["save_name"] = "{alg}_{dataset}_{num_lb}_{net1}_{net}_{seed}".format(
         alg=cfg["algorithm"],
         dataset=cfg["dataset"],
         num_lb=cfg["num_labels"],
-        ne1=cfg["net_teacher"],
+        net1=cfg["net_teacher"],
         net=cfg["net"],
         seed=cfg["seed"],
     )
@@ -106,6 +106,14 @@ def create_ossl_cv_config(
 
     # net config
     cfg["net_teacher"] = net[0]
+    path = os.path.join("./saved_models/OSSL_cv/")
+    path = os.path.join(path, "fullysupervised_{dataset}_{num_lb}_{net}_0".format(
+        dataset=dataset,
+        num_lb=num_labels,
+        net=net[0],
+
+    ))
+    cfg["net_teacher_path"] = os.path.join(path, "model_best.pth")
     cfg["net"] = net[1]
     cfg["net_from_name"] = False
 

@@ -199,7 +199,9 @@ class AlgorithmBase:
         """
         initialize teacher model
         """
-        teacher_model = self.teacher_net_builder(num_classes=self.num_classes, pretrained=self.args.use_pretrain, pretrained_path=self.args.pretrain_path)
+        print("teacher model path:", self.args.net_teacher_path)
+        teacher_model = self.teacher_net_builder(num_classes=self.num_classes, pretrained=True, pretrained_path=self.args.net_teacher_path)
+        
         return teacher_model
 
     def set_ema_model(self):

@@ -264,6 +264,8 @@ def exp_OSSL_cv(label_amount):
 
     nets = [
         "resnet8x4",
+        "resnet32x4",
+        "resnet50",
         "resnet18",
         "vit_tiny_patch2_32",
         "wrn_16_1",

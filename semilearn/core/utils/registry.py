@@ -66,7 +66,7 @@ ALL_MODULES = [
     # NOTE: add all algorithms here
     ('semilearn.algorithms', ['adamatch', 'comatch', 'crmatch', 'dash', 'fixmatch', 'flexmatch', 'fullysupervised', 'meanteacher',
                               'mixmatch', 'pimodel', 'pseudolabel', 'remixmatch', 'simmatch', 'uda', 'vat', 'softmatch', 'freematch',
-                              'sequencematch', 'refixmatch']),
+                              'sequencematch', 'refixmatch', 'kd']),
     ('semilearn.imb_algorithms', ['abc', 'cossl', 'adsh', 'crest', 'darp', 'daso', 'debiaspl', 'saw', 'tras'])
 ]
 
@@ -85,6 +85,7 @@ def import_all_modules_for_register():
                 else:
                     full_name = name
                 importlib.import_module(full_name)
+                # print("Module {} imported.".format(full_name))
             except ImportError as error:
                 errors.append((name, error))
     _handle_errors(errors)

@@ -17,6 +17,7 @@ class ReMixMatch_Net(nn.Module):
     def __init__(self, base, use_rot=True):
         super(ReMixMatch_Net, self).__init__()
         self.backbone = base
+        #TODO 模型feature好像改了
         self.num_features = base.num_features
 
         if use_rot:

@@ -33,6 +33,7 @@ amp: False
 clip: 0.0
 use_cat: True
 net_teacher: resnet34
+net_teacher_path: ./saved_models/OSSL_cv/fullysupervised_cifar100_50000_resnet34_0/model_best.pth
 net: wrn_16_2
 net_from_name: False
 data_dir: ./data

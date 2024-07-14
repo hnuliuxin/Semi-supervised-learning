@@ -2,6 +2,7 @@ import os
 import math
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from semilearn.core import AlgorithmBase
 from semilearn.core.utils import EMA, ALGORITHMS
 from semilearn.algorithms.hooks import PseudoLabelingHook
@@ -45,7 +46,12 @@ class statm_loss(nn.Module):
         mean_gap = (x_mean-y_mean).pow(2).mean(1)
         return mean_gap.mean()
 
-
+def KD_Loss(logits_student, logits_teacher, temperature):
+    log_pred_student = F.log_softmax(logits_student / temperature, dim=1)
+    pred_teacher = F.softmax(logits_teacher / temperature, dim=1)
+    loss_kd = F.kl_div(log_pred_student, pred_teacher, reduction="none").sum(1).mean()
+    loss_kd *= temperature**2
+    return loss_kd
 
 
 @ALGORITHMS.register('srd')
@@ -83,6 +89,54 @@ class SRD(AlgorithmBase):
         self.beta = beta
         self.criterion_kd_weight = criterion_kd_weight
         #TODO SRD的特征好像是取得倒数第二层，注意再看下
-        self.connector = transfer_conv(self.model)
+        data = torch.randn(2, 3, 32, 32)
+        feat_s = self.model(data, only_feat=True)
+        feat_t = self.teacher_model(data, only_feat=True)
+        self.connector = transfer_conv(feat_s.shape[1], feat_t.shape[1])
+        self.statm_loss = statm_loss()
     
+    def train_step(self, x_lb, y_lb, x_ulb_w):
+        with self.amp_cm():
+
+            outs_x_lb = self.model(x_lb)
+            outs_x_lb_t = self.teacher_model(x_lb)
+            logits_x_lb = outs_x_lb['logits']
+            feats_x_lb = outs_x_lb['feats']
+            logits_x_lb_t = outs_x_lb_t['logits']
+            feats_x_lb_t = outs_x_lb_t['feats']
+
+            #特征维度转换
+            feats_x_lb = self.connector(feats_x_lb)
+            logit_tc = self.teacher_model(x=None, feat_s=feats_x_lb)
+
+            #有标签的损失
+            cls_loss = nn.CrossEntropyLoss(logits_x_lb, y_lb)
+            div_loss = KD_Loss(logits_x_lb, logits_x_lb_t, self.T)
+            kd_loss = self.criterion_kd_weight * self.statm_loss(feats_x_lb, feats_x_lb_t) + F.mse_loss(logit_tc, logits_x_lb_t)
+
+            outs_x_unlb = self.model(x_ulb_w)
+            outs_x_unlb_t = self.teacher_model(x_ulb_w)
+            feats_x_unlb = outs_x_unlb['feats']
+            logits_x_unlb_t = outs_x_unlb_t['logits']
+            feats_x_unlb_t = outs_x_unlb_t['feats']
+
+
+            feats_x_unlb = self.connector(feats_x_unlb)
+            logit_tc_unlb = self.teacher_model(x=None, feat_s=feats_x_unlb)
+            kd_loss_unlb = self.criterion_kd_weight * self.statm_loss(feats_x_unlb, feats_x_unlb_t) + F.mse_loss(logit_tc_unlb, logits_x_unlb_t)
+
+            #求和
+            sup_loss = self.gamma * cls_loss + self.alpha * div_loss + self.beta * kd_loss
+            unsup_loss = self.beta * kd_loss_unlb
+            total_loss = sup_loss + unsup_loss * self.lambda_u
+
+        out_dict = self.process_out_dict(loss = total_loss)
+        log_dict = self.process_log_dict(sup_loss=sup_loss.item(), 
+                                         unsup_loss=unsup_loss.item(), 
+                                         total_loss=total_loss.item())
     
+        return out_dict, log_dict
+
+
+            
+

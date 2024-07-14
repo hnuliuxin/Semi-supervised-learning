@@ -33,6 +33,7 @@ amp: False
 clip: 0.0
 use_cat: True
 net_teacher: resnet32x4
+net_teacher_path: ./saved_models/OSSL_cv/fullysupervised_cifar100_with_tiny_imagenet_200_resnet32x4_0/model_best.pth
 net: shuffleV1
 net_from_name: False
 data_dir: ./data
