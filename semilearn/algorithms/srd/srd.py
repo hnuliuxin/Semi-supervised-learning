@@ -82,7 +82,7 @@ class SRD(AlgorithmBase):
         # SRD specified arguments
         self.init(T=args.T, gamma=args.gamma, alpha=args.alpha, beta=args.beta, criterion_kd_weight=args.criterion_kd_weight)
 
-    def init(self, T, gamma=1, alpha=1, beta=1, criterion_kd_weight=1):
+    def init(self, T, gamma=1, alpha=1, beta=1, criterion_kd_weight=10):
         self.T = T
         self.gamma = gamma
         self.alpha = alpha
@@ -138,5 +138,24 @@ class SRD(AlgorithmBase):
         return out_dict, log_dict
 
 
-            
+    def get_save_dict(self):
+        save_dict = super().get_save_dict() 
+        save_dict["T"] = self.T
+        save_dict["gamma"] = self.gamma
+        save_dict["alpha"] = self.alpha
+        save_dict["beta"] = self.beta
+        save_dict["criterion_kd_weight"] = self.criterion_kd_weight
+        return save_dict
+
+    def load_model(self, load_path):
+        checkpoint = super().load_model(load_path)
+        self.T = checkpoint["T"]
+        self.gamma = checkpoint["gamma"]
+        self.alpha = checkpoint["alpha"]
+        self.beta = checkpoint["beta"]
+        self.criterion_kd_weight = checkpoint["criterion_kd_weight"]
+        return checkpoint
+    
+    
+
 
