@@ -107,7 +107,7 @@ def create_ossl_cv_config(
     # net config
     cfg["net_teacher"] = net[0]
     path = os.path.join("./saved_models/OSSL_cv/")
-    path = os.path.join(path, "fullysupervised_{dataset}_{num_lb}_{net}_0".format(
+    path = os.path.join(path, "supervised_{dataset}_{num_lb}_{net}_0".format(
         dataset=dataset,
         num_lb=num_labels,
         net=net[0],

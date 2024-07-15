@@ -343,7 +343,7 @@ if __name__ == "__main__":
         os.makedirs("./saved_models/OSSL_cv/", exist_ok=True)
     if not os.path.exists("./config/OSSL_cv/"):
         os.makedirs("./config/OSSL_cv/", exist_ok=True)
-    label_amount = {"s": [2, 2], "m": [4, 4], "l":[25, 25]}
+    label_amount = {"s": [2, 2], "m": [4, 4], "l":[25, 25], "full":[500, 500]}
     for i in label_amount:
         exp_OSSL_cv(label_amount=label_amount[i])
 

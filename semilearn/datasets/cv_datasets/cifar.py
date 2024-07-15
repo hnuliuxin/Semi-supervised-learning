@@ -69,12 +69,12 @@ def get_cifar(args, alg, name, num_labels, num_classes, data_dir='./data', inclu
                                                                 ulb_imbalance_ratio=args.ulb_imb_ratio,
                                                                 include_lb_to_ulb=include_lb_to_ulb)
     
-    lb_count = [0 for _ in range(num_classes)]
-    ulb_count = [0 for _ in range(num_classes)]
-    for c in lb_targets:
-        lb_count[c] += 1
-    for c in ulb_targets:
-        ulb_count[c] += 1
+    # lb_count = [0 for _ in range(num_classes)]
+    # ulb_count = [0 for _ in range(num_classes)]
+    # for c in lb_targets:
+    #     lb_count[c] += 1
+    # for c in ulb_targets:
+    #     ulb_count[c] += 1
     # print("lb count: {}".format(lb_count))
     # print("ulb count: {}".format(ulb_count))
     # lb_count = lb_count / lb_count.sum()

@@ -375,9 +375,11 @@ def main_worker(gpu, ngpus_per_node, args):
     logger.info(f"Number of Trainable Params: {count_parameters(model.model)}")
 
     # SET Devices for (Distributed) DataParallel
+    # model.teacher_model = send_model_cuda(args, model.teacher_model)
     model.model = send_model_cuda(args, model.model)
-    if hasattr(model, "model_teacher") and model.model_teacher is not None:
-        model.model_teacher = send_model_cuda(args, model.model_teacher)
+    if args.net_teacher is not None:
+        print("send teacher model to cuda")
+        model.teacher_model = send_model_cuda(args, model.teacher_model)
     model.ema_model = send_model_cuda(args, model.ema_model, clip_batch=False)
     logger.info(f"Arguments: {model.args}")
 
