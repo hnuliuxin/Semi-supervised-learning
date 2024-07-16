@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from semilearn.core.utils import ALGORITHMS
 from semilearn.core.algorithmbase import AlgorithmBase
 from semilearn.algorithms.hooks import DistAlignQueueHook, PseudoLabelingHook, FixedThresholdingHook
-from semilearn.algorithms.utils import ce_loss, consistency_loss, SSL_Argument, str2bool
+from semilearn.algorithms.utils import SSL_Argument, str2bool
 
 from .utils import mb_sup_loss
 
@@ -104,7 +104,7 @@ class IOMatch(AlgorithmBase):
                 raise ValueError("Bad configuration: use_cat should be True!")
 
             # supervised losses
-            sup_closed_loss = ce_loss(logits_x_lb, y_lb, reduction='mean')
+            sup_closed_loss = self.ce_loss(logits_x_lb, y_lb, reduction='mean')
             sup_mb_loss = self.lambda_mb * mb_sup_loss(logits_mb_x_lb, y_lb)
             sup_loss = sup_closed_loss + sup_mb_loss
 
@@ -116,7 +116,7 @@ class IOMatch(AlgorithmBase):
                 self.bn_controller.freeze_bn(self.model)
                 logits_rot = self.model(x_ulb_r)['logits_rot']
                 self.bn_controller.unfreeze_bn(self.model)
-                rot_loss = ce_loss(logits_rot, y_ulb_r, reduction='mean')
+                rot_loss = self.ce_loss(logits_rot, y_ulb_r, reduction='mean')
             else:
                 rot_loss = torch.tensor(0).to(self.gpu)
 
@@ -144,8 +144,8 @@ class IOMatch(AlgorithmBase):
             q_mask = self.call_hook("masking", "MaskingHook", cutoff=self.q_cutoff,
                                     logits_x_ulb=targets_q, softmax_x_ulb=False)
 
-            ui_loss = consistency_loss(logits_x_ulb_s, targets_p, 'ce', mask=in_mask * p_mask)
-            op_loss = consistency_loss(logits_open_x_ulb_s, targets_q, 'ce', mask=q_mask)
+            ui_loss = self.consistency_loss(logits_x_ulb_s, targets_p, 'ce', mask=in_mask * p_mask)
+            op_loss = self.consistency_loss(logits_open_x_ulb_s, targets_q, 'ce', mask=q_mask)
 
             if self.epoch == 0:
                 op_loss *= 0.0
