@@ -28,7 +28,7 @@ class EvaluationHook(Hook):
             save_path = os.path.join(algorithm.save_dir, algorithm.save_name)
             algorithm.save_model('latest_model.pth', save_path)
 
-        results_dict = {'eval/best_acc': algorithm.best_eval_acc, 'eval/best_it': algorithm.best_it}
+        results_dict = {'eval/best_acc': algorithm.best_eval_acc, 'eval/best_it': algorithm.best_it + 1}
         if 'test' in algorithm.loader_dict:
             # load the best model and evaluate on test dataset
             best_model_path = os.path.join(algorithm.args.save_dir, algorithm.args.save_name, 'model_best.pth')
