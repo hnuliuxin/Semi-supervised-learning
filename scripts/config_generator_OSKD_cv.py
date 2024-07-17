@@ -49,7 +49,7 @@ def create_ossl_cv_config(
     cfg["algorithm"] = alg
 
     # save config
-    cfg["save_dir"] = "./saved_models/OSSL_cv/"
+    cfg["save_dir"] = "./saved_models/OSKD_cv/"
     cfg["save_name"] = None
     cfg["resume"] = False
     cfg["load_path"] = None
