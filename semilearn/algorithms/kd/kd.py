@@ -43,34 +43,70 @@ class KD(AlgorithmBase):
         self.alpha = alpha
         self.beta = beta
 
-    def train_step(self, x_lb, y_lb, x_ulb_w):
+    def train(self):
+        if self.dataset_dict['train_ulb'] is None:
+            self.model.train()
+            self.call_hook("before_run")
+                
+            for epoch in range(self.start_epoch, self.epochs):
+                self.epoch = epoch
+                
+                # prevent the training iterations exceed args.num_train_iter
+                if self.it > self.num_train_iter:
+                    break
+
+                self.call_hook("before_train_epoch")
+
+                for data_lb in self.loader_dict['train_lb']:
+
+                    # prevent the training iterations exceed args.num_train_iter
+                    if self.it > self.num_train_iter:
+                        break
+
+                    self.call_hook("before_train_step")
+                    self.out_dict, self.log_dict = self.train_step(**self.process_batch(**data_lb))
+                    self.call_hook("after_train_step")
+                    self.it += 1
+
+                self.call_hook("after_train_epoch")
+            self.call_hook("after_run")
+        else:
+            return super().train()
+
+    def train_step(self, x_lb, y_lb, x_ulb_w = None):
         with self.amp_cm():
 
             outs_x_lb = self.model(x_lb)
             logits_x_lb = outs_x_lb['logits']
 
-            outs_x_unlb = self.model(x_ulb_w)
-            logits_x_unlb = outs_x_unlb['logits']
+            if x_ulb_w is not None:
+                outs_x_unlb = self.model(x_ulb_w)
+                logits_x_unlb = outs_x_unlb['logits']
 
             self.teacher_model.eval()
             outs_x_lb_teacher = self.teacher_model(x_lb)
             logits_x_lb_teacher = outs_x_lb_teacher['logits']
 
-            outs_x_unlb_teacher = self.teacher_model(x_ulb_w)
-            logits_x_unlb_teacher = outs_x_unlb_teacher['logits']
+            if x_ulb_w is not None:
+                outs_x_unlb_teacher = self.teacher_model(x_ulb_w)
+                logits_x_unlb_teacher = outs_x_unlb_teacher['logits']
 
-            feat_dict = {'x_lb': outs_x_lb['feat'][-1], 'x_ulb_w': outs_x_unlb['feat'][-1]}
+            feat_dict = {'x_lb': outs_x_lb['feat'][-1]}
+            if x_ulb_w is not None:
+                feat_dict['x_unlb'] = outs_x_unlb['feat'][-1]
 
             sup_loss = self.ce_loss(logits_x_lb, y_lb, reduction='mean')
             kd_loss = KD_Loss(logits_x_lb, logits_x_lb_teacher, self.T)
-            unsup_kd_loss = KD_Loss(logits_x_unlb, logits_x_unlb_teacher, self.T)
-
+            if x_ulb_w is not None:
+                unsup_kd_loss = KD_Loss(logits_x_unlb, logits_x_unlb_teacher, self.T)
+            else:
+                unsup_kd_loss = 0
             total_loss = sup_loss * self.gamma + kd_loss * self.alpha + unsup_kd_loss * self.lambda_u
 
         out_dict = self.process_out_dict(loss=total_loss, feat=feat_dict)
         log_dict = self.process_log_dict(sup_loss=sup_loss.item(), 
                                          kd_loss=kd_loss.item(), 
-                                         unsup_kd_loss=unsup_kd_loss.item())
+                                         unsup_kd_loss=unsup_kd_loss.item() if x_ulb_w is not None else 0,)
         return out_dict, log_dict
 
     def get_save_dict(self):
