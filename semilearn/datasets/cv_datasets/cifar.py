@@ -30,6 +30,8 @@ def get_cifar(args, alg, name, num_labels, num_classes, data_dir='./data', inclu
     crop_size = args.img_size
     crop_ratio = args.crop_ratio
 
+    
+
     transform_weak = transforms.Compose([
         transforms.Resize(crop_size),
         transforms.RandomCrop(crop_size, padding=int(crop_size * (1 - crop_ratio)), padding_mode='reflect'),
@@ -37,7 +39,6 @@ def get_cifar(args, alg, name, num_labels, num_classes, data_dir='./data', inclu
         transforms.ToTensor(),
         transforms.Normalize(mean[name], std[name])
     ])
-
     transform_medium = transforms.Compose([
         transforms.Resize(crop_size),
         transforms.RandomCrop(crop_size, padding=int(crop_size * (1 - crop_ratio)), padding_mode='reflect'),
@@ -46,7 +47,6 @@ def get_cifar(args, alg, name, num_labels, num_classes, data_dir='./data', inclu
         transforms.ToTensor(),
         transforms.Normalize(mean[name], std[name])
     ])
-
     transform_strong = transforms.Compose([
         transforms.Resize(crop_size),
         transforms.RandomCrop(crop_size, padding=int(crop_size * (1 - crop_ratio)), padding_mode='reflect'),
@@ -55,12 +55,20 @@ def get_cifar(args, alg, name, num_labels, num_classes, data_dir='./data', inclu
         transforms.ToTensor(),
         transforms.Normalize(mean[name], std[name])
     ])
-
     transform_val = transforms.Compose([
         transforms.Resize(crop_size),
         transforms.ToTensor(),
         transforms.Normalize(mean[name], std[name],)
     ])
+
+
+    dset = getattr(torchvision.datasets, name.upper())
+    dset = dset(data_dir, train=False, download=True)
+    test_data, test_targets = dset.data, dset.targets
+    eval_dset = BasicDataset(alg, test_data, test_targets, num_classes, transform_val, False, None, None, False)
+
+    if(num_labels == 50000):
+        return BasicDataset(alg, data, targets, num_classes, transform_weak, False, transform_strong, transform_strong, False), None, BasicDataset(alg, test_data, test_targets, num_classes, transform_val, False, None, None, False)
 
     lb_data, lb_targets, ulb_data, ulb_targets = split_ssl_data(args, data, targets, num_classes, 
                                                                 lb_num_labels=num_labels,
@@ -69,54 +77,15 @@ def get_cifar(args, alg, name, num_labels, num_classes, data_dir='./data', inclu
                                                                 ulb_imbalance_ratio=args.ulb_imb_ratio,
                                                                 include_lb_to_ulb=include_lb_to_ulb)
     
-    # lb_count = [0 for _ in range(num_classes)]
-    # ulb_count = [0 for _ in range(num_classes)]
-    # for c in lb_targets:
-    #     lb_count[c] += 1
-    # for c in ulb_targets:
-    #     ulb_count[c] += 1
-    # print("lb count: {}".format(lb_count))
-    # print("ulb count: {}".format(ulb_count))
-    # lb_count = lb_count / lb_count.sum()
-    # ulb_count = ulb_count / ulb_count.sum()
-    # args.lb_class_dist = lb_count
-    # args.ulb_class_dist = ulb_count
-
     if alg == 'fullysupervised':
         lb_data = data
         lb_targets = targets
-        # if len(ulb_data) == len(data):
-        #     lb_data = ulb_data 
-        #     lb_targets = ulb_targets
-        # else:
-        #     lb_data = np.concatenate([lb_data, ulb_data], axis=0)
-        #     lb_targets = np.concatenate([lb_targets, ulb_targets], axis=0)
-    
-    # output the distribution of labeled data for remixmatch
-    # count = [0 for _ in range(num_classes)]
-    # for c in lb_targets:
-    #     count[c] += 1
-    # dist = np.array(count, dtype=float)
-    # dist = dist / dist.sum()
-    # dist = dist.tolist()
-    # out = {"distribution": dist}
-    # output_file = r"./data_statistics/"
-    # output_path = output_file + str(name) + '_' + str(num_labels) + '.json'
-    # if not os.path.exists(output_file):
-    #     os.makedirs(output_file, exist_ok=True)
-    # with open(output_path, 'w') as w:
-    #     json.dump(out, w)
-
     lb_dset = BasicDataset(alg, lb_data, lb_targets, num_classes, transform_weak, False, transform_strong, transform_strong, False)
 
     ulb_dset = BasicDataset(alg, ulb_data, ulb_targets, num_classes, transform_weak, True, transform_medium, transform_strong, False)
     # ulb_dset = BasicDataset(alg, ulb_data, ulb_targets, num_classes, transform_weak, True, transform_medium, transform_strong, False)
 
-    dset = getattr(torchvision.datasets, name.upper())
-    dset = dset(data_dir, train=False, download=True)
-    test_data, test_targets = dset.data, dset.targets
-    eval_dset = BasicDataset(alg, test_data, test_targets, num_classes, transform_val, False, None, None, False)
-
+    
 
     # #输出第一个batch
     # print("lb_data[0]: ", lb_dset.data[0].shape)
