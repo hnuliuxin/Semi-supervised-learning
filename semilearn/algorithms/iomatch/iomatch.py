@@ -36,7 +36,7 @@ class IOMatchNet(nn.Module):
         self.openset_classifier.bias.data.zero_()
 
     def forward(self, x, **kwargs):
-        feat = self.backbone(x, only_feat=True)
+        feat = self.backbone(x, only_feat=True)[-1]
         logits = self.backbone(feat, only_fc=True)
         feat_proj = self.mlp_proj(feat)
         logits_open = self.openset_classifier(feat_proj)  # (k+1)-way logits
@@ -86,7 +86,8 @@ class IOMatch(AlgorithmBase):
         ema_model.load_state_dict(self.model.state_dict())
         return ema_model
 
-    def train_step(self, x_lb, y_lb, x_ulb_w, x_ulb_s):
+    # 不好适配只有有标签的情况
+    def train_step(self, x_lb, y_lb, x_ulb_w = None, x_ulb_s = None):
         num_lb = y_lb.shape[0]
         num_ulb = x_ulb_w.shape[0]
 
@@ -155,23 +156,43 @@ class IOMatch(AlgorithmBase):
 
             total_loss = sup_loss + unsup_loss + op_loss + rot_loss
 
-        self.call_hook("param_update", "ParamUpdateHook", loss=total_loss)
+        # self.call_hook("param_update", "ParamUpdateHook", loss=total_loss)
 
-        tb_dict = {'train/s_loss': sup_closed_loss.item(),
-                   'train/mb_loss': sup_mb_loss.item(),
-                   'train/ui_loss': ui_loss.item(),
-                   'train/op_loss': op_loss.item(),
-                   'train/rot_loss': rot_loss.item(),
-                   'train/sup_loss': sup_loss.item(),
-                   'train/unsup_loss': unsup_loss.item(),
-                   'train/total_loss': total_loss.item(),
-                   'train/selected_ratio': (in_mask * p_mask).float().mean().item(),
-                   'train/in_mask_ratio': in_mask.float().mean().item(),
-                   'train/p_mask_ratio': p_mask.float().mean().item(),
-                   'train/q_mask_ratio': q_mask.float().mean().item()
-                   }
-
-        return tb_dict
+        # tb_dict = {'train/s_loss': sup_closed_loss.item(),
+        #            'train/mb_loss': sup_mb_loss.item(),
+        #            'train/ui_loss': ui_loss.item(),
+        #            'train/op_loss': op_loss.item(),
+        #            'train/rot_loss': rot_loss.item(),
+        #            'train/sup_loss': sup_loss.item(),
+        #            'train/unsup_loss': unsup_loss.item(),
+        #            'train/total_loss': total_loss.item(),
+        #            'train/selected_ratio': (in_mask * p_mask).float().mean().item(),
+        #            'train/in_mask_ratio': in_mask.float().mean().item(),
+        #            'train/p_mask_ratio': p_mask.float().mean().item(),
+        #            'train/q_mask_ratio': q_mask.float().mean().item()
+        #            }
+        tb_dict = self.process_out_dict(s_loss = sup_closed_loss.item(),
+                                        mb_loss = sup_mb_loss.item(),
+                                        ui_loss = ui_loss.item(),
+                                        op_loss = op_loss.item(),
+                                        rot_loss = rot_loss.item(),
+                                        sup_loss = sup_loss.item(),
+                                        unsup_loss = unsup_loss.item(),
+                                        loss = total_loss,
+                                        selected_ratio = (in_mask * p_mask).float().mean().item(),
+                                        in_mask_ratio = in_mask.float().mean().item(),
+                                        p_mask_ratio = p_mask.float().mean().item(),
+                                        q_mask_ratio = q_mask.float().mean().item()
+                                        )
+        # log_dict = {'train/sup_loss': sup_loss.item(),
+        #            'train/unsup_loss': unsup_loss.item(),
+        #            'train/total_loss': total_loss.item()
+        # }
+        log_dict = self.process_out_dict(sup_loss = sup_loss.item(),
+                                         unsup_loss = unsup_loss.item(),
+                                         loss = total_loss.item()
+                                         )
+        return tb_dict, log_dict
 
     def get_save_dict(self):
         save_dict = super().get_save_dict()
