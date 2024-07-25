@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 import torch.nn.functional as F
 from semilearn.core import AlgorithmBase
 from semilearn.core.utils import ALGORITHMS
@@ -43,35 +44,7 @@ class KD(AlgorithmBase):
         self.alpha = alpha
         self.beta = beta
 
-    def train(self):
-        if self.dataset_dict['train_ulb'] is None:
-            self.model.train()
-            self.call_hook("before_run")
-                
-            for epoch in range(self.start_epoch, self.epochs):
-                self.epoch = epoch
-                
-                # prevent the training iterations exceed args.num_train_iter
-                if self.it > self.num_train_iter:
-                    break
-
-                self.call_hook("before_train_epoch")
-
-                for data_lb in self.loader_dict['train_lb']:
-
-                    # prevent the training iterations exceed args.num_train_iter
-                    if self.it > self.num_train_iter:
-                        break
-
-                    self.call_hook("before_train_step")
-                    self.out_dict, self.log_dict = self.train_step(**self.process_batch(**data_lb))
-                    self.call_hook("after_train_step")
-                    self.it += 1
-
-                self.call_hook("after_train_epoch")
-            self.call_hook("after_run")
-        else:
-            return super().train()
+    
 
     def train_step(self, x_lb, y_lb, x_ulb_w = None):
         with self.amp_cm():
@@ -84,12 +57,13 @@ class KD(AlgorithmBase):
                 logits_x_unlb = outs_x_unlb['logits']
 
             self.teacher_model.eval()
-            outs_x_lb_teacher = self.teacher_model(x_lb)
-            logits_x_lb_teacher = outs_x_lb_teacher['logits']
+            with torch.no_grad():
+                outs_x_lb_teacher = self.teacher_model(x_lb)
+                logits_x_lb_teacher = outs_x_lb_teacher['logits']
 
-            if x_ulb_w is not None:
-                outs_x_unlb_teacher = self.teacher_model(x_ulb_w)
-                logits_x_unlb_teacher = outs_x_unlb_teacher['logits']
+                if x_ulb_w is not None:
+                    outs_x_unlb_teacher = self.teacher_model(x_ulb_w)
+                    logits_x_unlb_teacher = outs_x_unlb_teacher['logits']
 
             feat_dict = {'x_lb': outs_x_lb['feat'][-1]}
             if x_ulb_w is not None:
