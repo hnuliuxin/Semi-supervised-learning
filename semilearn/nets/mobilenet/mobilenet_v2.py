@@ -105,6 +105,7 @@ class MobileNetV2(nn.Module):
         self.conv2 = conv_1x1_bn(input_channel, self.last_channel)
 
         # building classifier
+        self.num_features = self.last_channel
         self.classifier = nn.Sequential(
             # nn.Dropout(0.5),
             nn.Linear(self.last_channel, feature_dim),
@@ -182,7 +183,12 @@ class MobileNetV2(nn.Module):
                 n = m.weight.size(1)
                 m.weight.data.normal_(0, 0.01)
                 m.bias.data.zero_()
-
+    def group_matcher(self, coarse=False, prefix=''):
+        matcher = dict(
+            stem=r'^{}conv1'.format(prefix),
+            blocks=r'^{}blocks\.(\d+)\.conv'.format(prefix) if coarse else r'^{}blocks\.(\d+)\.conv\.(\d+)'.format(prefix)
+        )
+        return matcher
 
 def mobilenetv2_T_w(**kwargs):
     model_kwargs = dict(width_mult=kwargs['W'], T=kwargs['T'], feature_dim=kwargs['num_classes'])

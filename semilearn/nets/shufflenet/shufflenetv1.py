@@ -67,6 +67,7 @@ class ShuffleNet(nn.Module):
         self.layer2 = self._make_layer(out_planes[1], num_blocks[1], groups)
         self.layer3 = self._make_layer(out_planes[2], num_blocks[2], groups)
         self.feat_dim = out_planes[2]
+        self.num_features = out_planes[2]
         self.classifier = nn.Linear(out_planes[2], num_classes)
 
     def _make_layer(self, out_planes, num_blocks, groups):
@@ -112,7 +113,11 @@ class ShuffleNet(nn.Module):
         output = self.classifier(out)
         result_dict = {'logits': output, 'feat': [f0, f1, f2, f3, f4]}
         return result_dict
-        
+    
+    def group_matcher(self, coarse=False, prefix=''):
+        matcher = dict(stem = r'^{}conv1'.format(prefix),
+                       blocks = r'^{}layer(\d+)'.format(prefix))
+        return matcher        
 
 
 def shuffleV1(pretrained=False, pretrained_path=None, **kwargs):

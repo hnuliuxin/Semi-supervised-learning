@@ -39,7 +39,7 @@ class VGG(nn.Module):
         self.pool3 = nn.MaxPool2d(kernel_size=2, stride=2)
         self.pool4 = nn.AdaptiveAvgPool2d((1, 1))
         # self.pool4 = nn.MaxPool2d(kernel_size=2, stride=2)
-
+        self.num_features = 512
         self.classifier = nn.Linear(512, num_classes)
         self._initialize_weights()
         self.stage_channels = [c[-1] for c in cfg]
@@ -111,6 +111,11 @@ class VGG(nn.Module):
         
         result_dict = {"logits": output, "feat": [f0, f1, f2, f3, f4, f5]}
         return result_dict
+    
+    def group_matcher(self, coarse=False, prefix=''):
+        matcher = dict(stem=r'^{}conv1|^{}bn1|^{}maxpool'.format(prefix, prefix, prefix), 
+                        blocks=r'^{}layer(\d+)'.format(prefix) if coarse else r'^{}layer(\d+)\.(\d+)'.format(prefix))
+        return matcher
 
     @staticmethod
     def _make_layers(cfg, batch_norm=False, in_channels=3):

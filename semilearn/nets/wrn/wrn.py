@@ -151,9 +151,10 @@ class WideResNet(nn.Module):
 
 
     def group_matcher(self, coarse=False, prefix=''):
-        matcher = dict(stem=r'^{}conv1'.format(prefix), blocks=r'^{}block(\d+)'.format(prefix) if coarse else r'^{}block(\d+)\.layer.(\d+)'.format(prefix))
+        matcher = dict(stem = r'^{}conv1'.format(prefix),
+                       blocks = r'^{}block(\d+)'.format(prefix) if coarse else r'^{}block(\d+)\.layer.(\d+)'.format(prefix))
         return matcher
-
+    
     def no_weight_decay(self):
         nwd = []
         for n, _ in self.named_parameters():
@@ -187,6 +188,12 @@ def wrn_40_1(pretrained=False, pretrained_path=None, **kwargs):
         model = load_checkpoint(model, pretrained_path)
     return model
 
+def wrn_40_4(pretrained=False, pretrained_path=None, **kwargs):
+    model = WideResNet(first_stride=1, depth=40, widen_factor=4, **kwargs)
+    if pretrained:
+        model = load_checkpoint(model, pretrained_path)
+    return model
+
 def wrn_16_1(pretrained=False, pretrained_path=None, **kwargs):
     model = WideResNet(first_stride=1, depth=16, widen_factor=1, **kwargs)
     if pretrained:
@@ -198,3 +205,5 @@ def wrn_16_2(pretrained=False, pretrained_path=None, **kwargs):
     if pretrained:
         model = load_checkpoint(model, pretrained_path)
     return model
+
+

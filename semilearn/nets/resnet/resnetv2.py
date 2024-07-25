@@ -79,6 +79,7 @@ class ResNet(nn.Module):
         self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)
         self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.num_features = 512 * block.expansion
         self.linear = nn.Linear(512 * block.expansion, num_classes)
 
         for m in self.modules():
@@ -167,6 +168,11 @@ class ResNet(nn.Module):
         x = x.view(x.size(0), -1)
         x = self.linear(x)
         return x
+
+    def group_matcher(self, coarse=False, prefix=''):
+        matcher = dict(stem=r'^{}conv1|^{}bn1|^{}maxpool'.format(prefix, prefix, prefix),
+                       blocks=r'^{}layer(\d+)'.format(prefix) if coarse else r'^{}layer(\d+)\.(\d+)'.format(prefix))
+        return matcher
 
 def resnet18(pretrained=False, pretrained_path=None, **kwargs):
     """Constructs a ResNet-18 model.

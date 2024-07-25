@@ -120,6 +120,7 @@ class ResNet(nn.Module):
         self.layer2 = self._make_layer(block, num_filters[2], n, stride=2)
         self.layer3 = self._make_layer(block, num_filters[3], n, stride=2)
         self.avgpool = nn.AvgPool2d(8)
+        self.num_features = num_filters[3] * block.expansion
         self.fc = nn.Linear(num_filters[3] * block.expansion, num_classes)
         self.stage_channels = num_filters
 
@@ -209,6 +210,11 @@ class ResNet(nn.Module):
         result_dict = {"logits": out, "feat": [f0, f1, f2, f3, f4]}
 
         return result_dict
+    
+    def group_matcher(self, coarse=False, prefix=''):
+        matcher = dict(stem=r'^{}conv1|^{}bn1|^{}maxpool'.format(prefix, prefix, prefix),
+                       blocks=r'^{}layer(\d+)'.format(prefix) if coarse else r'^{}layer(\d+)\.(\d+)'.format(prefix))
+        return matcher
 
 
 def resnet8(pretrained=False, pretrained_path=None, **kwargs):

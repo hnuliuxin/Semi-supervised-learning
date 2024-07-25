@@ -116,6 +116,7 @@ class ShuffleNetV2(nn.Module):
         self.conv2 = nn.Conv2d(out_channels[2], out_channels[3],
                                kernel_size=1, stride=1, padding=0, bias=False)
         self.bn2 = nn.BatchNorm2d(out_channels[3])
+        self.num_features = out_channels[3]
         self.classifier = nn.Linear(out_channels[3], num_classes)
 
     def _make_layer(self, out_channels, num_blocks):
@@ -159,6 +160,11 @@ class ShuffleNetV2(nn.Module):
         
         result_dict = {'logits': output, 'feat': [f0, f1, f2, f3, f4]}
         return result_dict
+    
+    def group_matcher(self, coarse=False, prefix=''):
+        matcher = dict(stem = r'^{}conv1'.format(prefix),
+                       blocks = r'^{}layer(\d+)'.format(prefix))
+        return matcher 
 
 configs = {
     0.2: {
