@@ -31,8 +31,8 @@ def load_checkpoint(model, checkpoint_path):
             key = '.'.join(key.split('.')[1:])
         
         # TODO: better ways
-        if key.startswith('fc') or key.startswith('classifier') or key.startswith('mlp') or key.startswith('head'):
-            continue
+        # if key.startswith('fc') or key.startswith('classifier') or key.startswith('mlp') or key.startswith('head'):
+        #     continue
             
         # check vit and interpolate
         # if isinstance(model, VisionTransformer) and 'patch_emb'

@@ -372,13 +372,16 @@ def main_worker(gpu, ngpus_per_node, args):
         model = get_imb_algorithm(args, _net_builder, tb_log, logger)
     else:
         model = get_algorithm(args, _net_builder, tb_log, logger, teacher_net_builder)
+    
     logger.info(f"Number of Trainable Params: {count_parameters(model.model)}")
 
     # SET Devices for (Distributed) DataParallel
     # model.teacher_model = send_model_cuda(args, model.teacher_model)
     model.model = send_model_cuda(args, model.model)
     if args.net_teacher is not None:
-        print("send teacher model to cuda")
+        logger.info(f"Number of teacher model params: {count_parameters(model.teacher_model)}")
+        # print("send teacher model to cuda")
+
         model.teacher_model = send_model_cuda(args, model.teacher_model)
     model.ema_model = send_model_cuda(args, model.ema_model, clip_batch=False)
     logger.info(f"Arguments: {model.args}")

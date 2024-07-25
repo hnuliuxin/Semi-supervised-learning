@@ -81,7 +81,7 @@ def get_dataset(args, algorithm, dataset, num_labels, num_classes, data_dir='./d
         test_dset = None
     elif dataset == "cifar100_with_tiny_imagenet":
         lb_dset, _, eval_dset = get_cifar(args, algorithm, "cifar100", num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)
-        ulb_dset, _, _ = get_tiny_imagenet(args, algorithm, "tiny_imagenet", num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb, is_all_ulb=True)
+        _, ulb_dset, _ = get_tiny_imagenet(args, algorithm, "tiny_imagenet", num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb, is_all_ulb=True)
         test_dset = None
     elif dataset == "cifar100_with_places365":
         lb_dset, _, eval_dset = get_cifar(args, algorithm, "cifar100", num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)

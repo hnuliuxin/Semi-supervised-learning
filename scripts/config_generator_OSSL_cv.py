@@ -191,6 +191,8 @@ def create_OSSL_cv_config(
         cfg["num_uda_warmup_iter"] = 5000
         cfg["num_stu_wait_iter"] = 3000
 
+    elif alg == "iomatch":
+        cfg["ema_m"] = 0.999
 
     cfg["img_size"] = img_size
     cfg["crop_ratio"] = crop_ratio
@@ -259,7 +261,9 @@ def exp_OSSL_cv(label_amount):
         "pimodel",
         "dash",
         "fullysupervised",
-        "supervised"
+        "supervised",
+        "iomatch",
+        "openmatch"
     ]
 
     nets = [

@@ -97,11 +97,15 @@ def get_tiny_imagenet(args, alg, name, num_labels, num_classes, data_dir='./data
         transforms.Normalize(mean[name], std[name],)
     ])
     
+    val_set = TinyImageNetValidation(val_path, label_to_index, transform=transform_val)
+
+
     #TODO 是否需要transform
     if is_all_ulb:
-        lb_dset = BasicDataset(alg, data, None, num_classes, transform_weak, True, transform_medium, transform_strong, False, data_type='pil')
-        return lb_dset, None, None
-
+        ulb_dset = BasicDataset(alg, data, None, num_classes, transform_weak, True, transform_medium, transform_strong, False, data_type='pil')
+        return None, ulb_dset, None
+    elif num_labels == 100000:
+        return BasicDataset(alg, data, targets, num_classes, transform_weak, False, transform_strong, transform_strong, False, data_type='pil'), None, val_set
     lb_data, lb_targets, ulb_data, ulb_targets = split_ssl_data(args, data, targets, num_classes,
                                                                 lb_num_labels=num_labels,
                                                                 ulb_num_labels=args.ulb_num_labels,
@@ -109,12 +113,12 @@ def get_tiny_imagenet(args, alg, name, num_labels, num_classes, data_dir='./data
                                                                 ulb_imbalance_ratio=args.ulb_imb_ratio,
                                                                 include_lb_to_ulb=include_lb_to_ulb)
 
-    lb_count = [0 for _ in range(num_classes)]
-    ulb_count = [0 for _ in range(num_classes)]
-    for c in lb_targets:
-        lb_count[c] += 1
-    for c in ulb_targets:
-        ulb_count[c] += 1
+    # lb_count = [0 for _ in range(num_classes)]
+    # ulb_count = [0 for _ in range(num_classes)]
+    # for c in lb_targets:
+    #     lb_count[c] += 1
+    # for c in ulb_targets:
+    #     ulb_count[c] += 1
     # print("lb count: {}".format(lb_count))
     # print("ulb count: {}".format(ulb_count))
 
@@ -122,7 +126,7 @@ def get_tiny_imagenet(args, alg, name, num_labels, num_classes, data_dir='./data
         lb_data = data
         lb_targets = targets
     
-    val_set = TinyImageNetValidation(val_path, label_to_index, transform=transform_val)
+    
     
     
     lb_dset = BasicDataset(alg, lb_data, lb_targets, num_classes, transform_weak, False, transform_strong, transform_strong, False, data_type='pil')
