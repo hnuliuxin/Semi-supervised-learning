@@ -247,7 +247,7 @@ class OpenMatch(AlgorithmBase):
         self.ema.apply_shadow()
         self.print_fn(f"Selecting...")
         with torch.no_grad():
-            print(len(loader.dataset))
+            # print(len(loader.dataset))
             for batch_idx, data in enumerate(loader):
                 x = data['x_ulb_w_0']
                 y = data['y_ulb']
