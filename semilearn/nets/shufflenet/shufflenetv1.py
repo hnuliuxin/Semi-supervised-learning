@@ -94,9 +94,15 @@ class ShuffleNet(nn.Module):
     def get_bn_before_relu(self):
         raise NotImplementedError('ShuffleNet currently is not supported for "Overhaul" teacher')
 
-    def forward(self, x, only_fc=False, only_feat=False, **kwargs):
+    def forward(self, x, only_fc=False, only_feat=False, feat_s=None, **kwargs):
         if only_fc:
             return self.classifier(x)
+        if feat_s is not None:
+            new_feat = feat_s
+            x = F.avg_pool2d(new_feat, 4)
+            x = x.view(x.size(0), -1)
+            return self.classifier(x)
+    
         out = F.relu(self.bn1(self.conv1(x)))
         f0 = out
         out, f1_pre = self.layer1(out)

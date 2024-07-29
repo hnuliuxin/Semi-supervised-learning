@@ -56,7 +56,9 @@ class OpenMatchDataset(BasicDataset):
         else:
             target = self.targets_index[idx]
         img = self.data_index[idx]
-
+        # print(img)
+        if isinstance(img, tuple):
+            img = pil_loader(img[0])
         if isinstance(img, np.ndarray):
             img = Image.fromarray(img)  # shape of img should be [H, W, C]
         if isinstance(img, str):
@@ -141,7 +143,7 @@ class OpenMatch(AlgorithmBase):
         self.model.train()
         self.call_hook("before_run")
 
-        for epoch in range(self.epoch, self.epochs):
+        for epoch in range(self.start_epoch, self.epochs):
             self.epoch = epoch
 
             # prevent the training iterations exceed args.num_train_iter
@@ -245,6 +247,7 @@ class OpenMatch(AlgorithmBase):
         self.ema.apply_shadow()
         self.print_fn(f"Selecting...")
         with torch.no_grad():
+            print(len(loader.dataset))
             for batch_idx, data in enumerate(loader):
                 x = data['x_ulb_w_0']
                 y = data['y_ulb']
@@ -290,8 +293,8 @@ class OpenMatch(AlgorithmBase):
     def get_argument():
         return [
             SSL_Argument('--lambda_em', float, 0.1),
-            SSL_Argument('--lambda_socr', float, 0.5),
+            SSL_Argument('--lambda_socr', float, 1.0),
             SSL_Argument('--p_cutoff', float, 0.0),
-            SSL_Argument('--start_fix', int, 10),
+            SSL_Argument('--start_fix', int, 5),
             SSL_Argument('--fix_uratio', int, 7)
         ]

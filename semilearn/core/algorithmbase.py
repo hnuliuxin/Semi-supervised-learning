@@ -90,6 +90,7 @@ class AlgorithmBase:
         self.model = self.set_model()
         if teacher_net_builder is not None:
             self.teacher_model = self.set_teacher_model()
+            # self.teacher_model.requires_grad_(False)
         self.ema_model = self.set_ema_model()
 
         # build optimizer and scheduler
@@ -302,36 +303,59 @@ class AlgorithmBase:
         """
         self.model.train()
         self.call_hook("before_run")
-
-        for epoch in range(self.start_epoch, self.epochs):
-            self.epoch = epoch
+        
+        if self.dataset_dict['train_ulb'] is None:
+            for epoch in range(self.start_epoch, self.epochs):
+                self.epoch = epoch
             
-            # prevent the training iterations exceed args.num_train_iter
-            if self.it >= self.num_train_iter:
-                break
-            
-            self.call_hook("before_train_epoch")
+                # prevent the training iterations exceed args.num_train_iter
+                if self.it > self.num_train_iter:
+                    break
 
-            for data_lb, data_ulb in zip(self.loader_dict['train_lb'],
-                                         self.loader_dict['train_ulb']):
+                self.call_hook("before_train_epoch")
+
+                for data_lb in self.loader_dict['train_lb']:
+
+                    # prevent the training iterations exceed args.num_train_iter
+                    if self.it > self.num_train_iter:
+                        break
+
+                    self.call_hook("before_train_step")
+                    self.out_dict, self.log_dict = self.train_step(**self.process_batch(**data_lb))
+                    self.call_hook("after_train_step")
+                    self.it += 1
+
+                self.call_hook("after_train_epoch")
+        else:
+            for epoch in range(self.start_epoch, self.epochs):
+                self.epoch = epoch
+                
                 # prevent the training iterations exceed args.num_train_iter
                 if self.it >= self.num_train_iter:
                     break
                 
-                # 此处需查看USB对train_loader|ood_loader的处理
-                # 细节见set_data_loader函数
-                self.call_hook("before_train_step")
+                self.call_hook("before_train_epoch")
 
-                # 查看第一个batch的数据
-                # if self.rank == 0:
-                #     if self.it % 1024 == 0:
-                #         print("batch 数据：", data_lb['idx_lb'][:5])
-                #         print("ulb btach数据:", data_ulb['idx_ulb'][:5])
-                self.out_dict, self.log_dict = self.train_step(**self.process_batch(**data_lb, **data_ulb))
-                self.call_hook("after_train_step")
-                self.it += 1
-            
-            self.call_hook("after_train_epoch")
+                for data_lb, data_ulb in zip(self.loader_dict['train_lb'],
+                                            self.loader_dict['train_ulb']):
+                    # prevent the training iterations exceed args.num_train_iter
+                    if self.it >= self.num_train_iter:
+                        break
+                    
+                    # 此处需查看USB对train_loader|ood_loader的处理
+                    # 细节见set_data_loader函数
+                    self.call_hook("before_train_step")
+
+                    # 查看第一个batch的数据
+                    # if self.rank == 0:
+                    #     if self.it % 1024 == 0:
+                    #         print("batch 数据：", data_lb['idx_lb'][:5])
+                    #         print("ulb btach数据:", data_ulb['idx_ulb'][:5])
+                    self.out_dict, self.log_dict = self.train_step(**self.process_batch(**data_lb, **data_ulb))
+                    self.call_hook("after_train_step")
+                    self.it += 1
+                
+                self.call_hook("after_train_epoch")
 
         self.call_hook("after_run")
 
