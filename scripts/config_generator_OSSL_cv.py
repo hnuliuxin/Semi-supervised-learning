@@ -275,6 +275,7 @@ def exp_OSSL_cv(label_amount):
         "wrn_16_1",
         "wrn_40_1",
         "mobilenet",
+        "shuffleV1",
         "shuffleV2",
         "vgg8",
         "vgg13",
