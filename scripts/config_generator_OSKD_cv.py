@@ -154,7 +154,8 @@ def exp_OSKD_cv(label_amount):
         "kd",
         "dkd",
         "crd",
-        "srd"
+        "srd",
+        "fitnet"
     ]
 
     nets = [
