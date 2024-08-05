@@ -126,7 +126,7 @@ class SRD(AlgorithmBase):
         with torch.no_grad():
             self.model.eval()
             self.teacher_model.eval()
-            data = torch.randn(2, 3, 32, 32)
+            data = torch.randn(2, 3, self.args.img_size, self.args.img_size)
             self.feat_s = self.model(data, only_feat=True)[-2]
             self.feat_t = self.teacher_model(data, only_feat=True)[-2]
             self.model = SRDNet(self.model, num_classes=self.num_classes, feat_s_shape=self.feat_s.shape[1], feat_t_shape=self.feat_t.shape[1])

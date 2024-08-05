@@ -32,7 +32,7 @@ class KD(AlgorithmBase):
                 weight for classification
             - alpha (`float`, default=None):
                 weight balance for KD
-        """
+    """
     def __init__(self, args, net_builder, tb_log=None, logger=None, teacher_net_builder=None):
         super().__init__(args, net_builder, tb_log, logger, teacher_net_builder)
         self.init(T=args.T, gamma=args.gamma, alpha=args.alpha)

@@ -105,11 +105,11 @@ class ShuffleNet(nn.Module):
     
         out = F.relu(self.bn1(self.conv1(x)))
         f0 = out
-        out, f1_pre = self.layer1(out)
+        out, _ = self.layer1(out)
         f1 = out
-        out, f2_pre = self.layer2(out)
+        out, _ = self.layer2(out)
         f2 = out
-        out, f3_pre = self.layer3(out)
+        out, _ = self.layer3(out)
         f3 = out
         out = F.avg_pool2d(out, 4)
         out = out.view(out.size(0), -1)
