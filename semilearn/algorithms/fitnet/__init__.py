@@ -1,0 +1,1 @@
+from .fitnet import FitNet
