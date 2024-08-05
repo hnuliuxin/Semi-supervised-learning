@@ -56,4 +56,59 @@ class dkd(AlgorithmBase):
     """Decoupled Knowledge Distillation(CVPR 2022)"""
     def __init__(self, args, net_builder, tb_log=None, logger=None, teacher_net_builder=None):
         super().__init__(args, net_builder, tb_log, logger, teacher_net_builder)
-        self.init(T=args.T, gamma=args.gamma, alpha=args.alpha, beta=args.beta)
+        self.T = args.T
+        self.gamma = args.gamma
+        self.alpha = args.alpha
+        self.beta = args.beta
+
+    def train_step(self, x_lb, y_lb, x_ulb_w = None):
+        with self.amp_cm():
+
+            outs_x_lb = self.model(x_lb)
+            logits_x_lb = outs_x_lb['logits']
+
+            if x_ulb_w is not None:
+                outs_x_unlb = self.model(x_ulb_w)
+                logits_x_unlb = outs_x_unlb['logits']
+
+            self.teacher_model.eval()
+            with torch.no_grad():
+                outs_x_lb_teacher = self.teacher_model(x_lb)
+                logits_x_lb_teacher = outs_x_lb_teacher['logits']
+
+                if x_ulb_w is not None:
+                    outs_x_unlb_teacher = self.teacher_model(x_ulb_w)
+                    logits_x_unlb_teacher = outs_x_unlb_teacher['logits']
+
+            sup_loss = self.ce_loss(logits_x_lb, y_lb, reduction='mean')
+            kd_loss = dkd_loss(logits_x_lb, logits_x_lb_teacher, y_lb, self.alpha, self.beta, self.T)
+            total_loss = sup_loss * self.gamma + kd_loss
+        out_dict = self.process_out_dict(loss=total_loss)
+        log_dict = self.process_log_dict(sup_loss=sup_loss.item(), 
+                                         kd_loss=kd_loss.item())
+        return out_dict, log_dict
+            
+
+    def get_save_dict(self):
+        save_dict = super().get_save_dict()
+        save_dict['T'] = self.T
+        save_dict['gamma'] = self.gamma
+        save_dict['alpha'] = self.alpha
+        save_dict['beta'] = self.beta
+        return save_dict
+
+    def load_model(self, load_path):
+        checkpoint = super().load_model(load_path)
+        self.T = checkpoint['T']
+        self.gamma = checkpoint['gamma']
+        self.alpha = checkpoint['alpha']
+        self.beta = checkpoint['beta']
+        return checkpoint
+
+    def get_argument():
+        return [
+            SSL_Argument("--T", default=0.1, type=float, help="Temperature for distillation smoothing"),
+            SSL_Argument("--gamma", default=1, type=float, help="weight for classification"),
+            SSL_Argument("--alpha", default=1, type=float, help="weight balance for tckd_loss"),
+            SSL_Argument("--beta", default=1, type=float, help="weight balance for nckd_loss"),
+        ]
