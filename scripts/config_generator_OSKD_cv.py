@@ -167,7 +167,8 @@ def exp_OSKD_cv(label_amount):
         ["resnet34", "resnet10"],
         ["resnet50", "resnet18"],
         ["resnet34", "wrn_16_2"],
-        ["vgg13", "vgg8"]
+        ["vgg13", "vgg8"],
+        ["wrn_40_1", "wrn_16_1"]
     ]
 
     datasets = [
