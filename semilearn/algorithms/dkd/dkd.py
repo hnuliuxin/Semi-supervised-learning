@@ -107,7 +107,7 @@ class dkd(AlgorithmBase):
 
     def get_argument():
         return [
-            SSL_Argument("--T", default=0.1, type=float, help="Temperature for distillation smoothing"),
+            SSL_Argument("--T", default=0.1, type=float, help="Temperature for sharpening and KD"),
             SSL_Argument("--gamma", default=1, type=float, help="weight for classification"),
             SSL_Argument("--alpha", default=1, type=float, help="weight balance for tckd_loss"),
             SSL_Argument("--beta", default=1, type=float, help="weight balance for nckd_loss"),

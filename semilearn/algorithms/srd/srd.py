@@ -146,7 +146,7 @@ class SRD(AlgorithmBase):
             # srd特征取倒数第二层
             outs_x = self.model(input)
             logits_x = outs_x['logits']
-            feats_x = outs_x['feat']
+            feats_x = outs_x['feat'][-2]
             
             with torch.no_grad():
                 outs_x_t = self.teacher_model(input)
