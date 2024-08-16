@@ -87,7 +87,9 @@ def create_ossl_cv_config(
 
     if alg == "srd":
         cfg["criterion_kd_weight"] = 10
-    
+    elif alg == "dtkd":
+        cfg["T"] = 0.1
+        cfg["p_cutoff"] = 0.95
 
     # ulb_loss_ratio没有设置，因为每个算法的都不同。默认为1
 
@@ -155,7 +157,8 @@ def exp_OSKD_cv(label_amount):
         "dkd",
         "crd",
         "srd",
-        "fitnet"
+        "fitnet",
+        "dtkd"
     ]
 
     nets = [
