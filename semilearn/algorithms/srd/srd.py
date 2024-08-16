@@ -37,10 +37,14 @@ class SRDNet(nn.Module):
     def __init__(self, backbone, num_classes, feat_s_shape, feat_t_shape):
         super(SRDNet, self).__init__()
         self.backbone = backbone
+        self.feat_s_shape = feat_s_shape
+        self.feat_t_shape = feat_t_shape
         # self.connector = transfer_conv(feat_s_shape, feat_t_shape)
+        print("feat_s_shape: ", feat_s_shape)
+        print("feat_t_shape: ", feat_t_shape)
         self.connector = nn.Sequential(
-            nn.Conv2d(feat_s_shape, feat_t_shape, kernel_size=1, stride=1, padding=0, bias=False),
-            nn.BatchNorm2d(feat_t_shape),
+            nn.Conv2d(feat_s_shape[1], feat_t_shape[1], kernel_size=1, stride=1, padding=0, bias=False),
+            nn.BatchNorm2d(feat_t_shape[1]),
             nn.ReLU())
         nn.init.xavier_normal_(self.connector[0].weight)
         nn.init.constant_(self.connector[1].weight, 1)
@@ -50,6 +54,8 @@ class SRDNet(nn.Module):
         feats_x = self.backbone(x, only_feat=True)[-2]
         logits_x = self.backbone(x, feat_s=feats_x)
         feats_x = self.connector(feats_x)
+        if(self.feat_s_shape[2] != self.feat_t_shape[2]):
+            feats_x = F.interpolate(feats_x, size=(self.feat_t_shape[2], self.feat_t_shape[3]), mode='bilinear', align_corners=True)
         return_dict = {
             'logits': logits_x,
             'feat': feats_x
@@ -129,8 +135,8 @@ class SRD(AlgorithmBase):
             data = torch.randn(2, 3, self.args.img_size, self.args.img_size)
             self.feat_s = self.model(data, only_feat=True)[-2]
             self.feat_t = self.teacher_model(data, only_feat=True)[-2]
-            self.model = SRDNet(self.model, num_classes=self.num_classes, feat_s_shape=self.feat_s.shape[1], feat_t_shape=self.feat_t.shape[1])
-            self.ema_model = SRDNet(self.ema_model, num_classes=self.num_classes, feat_s_shape=self.feat_s.shape[1], feat_t_shape=self.feat_t.shape[1])
+            self.model = SRDNet(self.model, num_classes=self.num_classes, feat_s_shape=self.feat_s.shape, feat_t_shape=self.feat_t.shape)
+            self.ema_model = SRDNet(self.ema_model, num_classes=self.num_classes, feat_s_shape=self.feat_s.shape, feat_t_shape=self.feat_t.shape)
             self.ema_model.load_state_dict(self.model.state_dict())
 
 
@@ -143,10 +149,10 @@ class SRD(AlgorithmBase):
             input = torch.cat([x_lb, x_ulb_w], dim=0) if x_ulb_w is not None else x_lb
             batch_size = x_lb.shape[0]
 
-            # srd特征取倒数第二层
+            # SrdNet特征取倒数第二层
             outs_x = self.model(input)
             logits_x = outs_x['logits']
-            feats_x = outs_x['feat'][-2]
+            feats_x = outs_x['feat']
             
             with torch.no_grad():
                 outs_x_t = self.teacher_model(input)

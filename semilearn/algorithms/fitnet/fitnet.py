@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from semilearn.core import AlgorithmBase
-from semilearn.core.utils import ALGORITHMS
+from semilearn.core.utils import ALGORITHMS, send_model_cuda
 from semilearn.algorithms.utils import SSL_Argument
 
 
@@ -61,9 +61,12 @@ class FitNet(AlgorithmBase):
             self.model.eval()
             self.teacher_model.eval()
             data = torch.randn(1, 3, self.args.img_size, self.args.img_size)
-            self.feat_s = self.model(data, only_feat=True)[-1]
-            self.feat_t = self.teacher_model(data, only_feat=True)[-1]
-            self.conv_reg = ConvReg(self.feat_s, self.feat_t)
+            self.feat_s = self.model(data, only_feat=True)[2]
+            self.feat_t = self.teacher_model(data, only_feat=True)[2]
+            # print("student feature size: ", self.feat_s.shape)
+            # print("teacher feature size: ", self.feat_t.shape)
+            self.conv_reg = ConvReg(self.feat_s.shape, self.feat_t.shape)
+            send_model_cuda(self.args, self.conv_reg)
     
     def train_step(self, x_lb, y_lb, x_ulb_w = None):
         with self.amp_cm():
@@ -75,11 +78,14 @@ class FitNet(AlgorithmBase):
 
             outs_x = self.model(input)
             logits_x = outs_x['logits']
-            feats_x = outs_x['feats'][-1]
+            feats_x = outs_x['feat'][2]
             
             with torch.no_grad():
-                outs_x_teacher = self.teacher_model(x_lb)
-                feats_x_teacher = outs_x_teacher['feats'][-1]
+                outs_x_teacher = self.teacher_model(input)
+                feats_x_teacher = outs_x_teacher['feat'][2]
+
+            feats_x = self.conv_reg(feats_x)
+            # print(feats_x.shape, feats_x_teacher.shape)
 
             sup_loss = self.ce_loss(logits_x[:batch_size], y_lb, reduction='mean')
             kd_loss = self.consistency_loss(feats_x, feats_x_teacher, 'mse')
