@@ -54,6 +54,7 @@ class SRDNet(nn.Module):
         feats_x = self.backbone(x, only_feat=True)[-2]
         logits_x = self.backbone(x, feat_s=feats_x)
         feats_x = self.connector(feats_x)
+        # 不同模型输出通道可能不一致，需要插值
         if(self.feat_s_shape[2] != self.feat_t_shape[2]):
             feats_x = F.interpolate(feats_x, size=(self.feat_t_shape[2], self.feat_t_shape[3]), mode='bilinear', align_corners=True)
         return_dict = {
