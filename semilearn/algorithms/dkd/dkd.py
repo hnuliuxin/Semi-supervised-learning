@@ -82,7 +82,7 @@ class dkd(AlgorithmBase):
 
             sup_loss = self.ce_loss(logits_x_lb, y_lb, reduction='mean')
             kd_loss = dkd_loss(logits_x_lb, logits_x_lb_teacher, y_lb, self.alpha, self.beta, self.T)
-            total_loss = sup_loss * self.gamma + kd_loss
+            total_loss = sup_loss * self.gamma + kd_loss * self.alpha
         out_dict = self.process_out_dict(loss=total_loss)
         log_dict = self.process_log_dict(sup_loss=sup_loss.item(), 
                                          kd_loss=kd_loss.item())
