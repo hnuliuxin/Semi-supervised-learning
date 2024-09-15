@@ -42,6 +42,7 @@ class SRDNet(nn.Module):
         # self.connector = transfer_conv(feat_s_shape, feat_t_shape)
         print("feat_s_shape: ", feat_s_shape)
         print("feat_t_shape: ", feat_t_shape)
+        # 改变通道数
         self.connector = nn.Sequential(
             nn.Conv2d(feat_s_shape[1], feat_t_shape[1], kernel_size=1, stride=1, padding=0, bias=False),
             nn.BatchNorm2d(feat_t_shape[1]),
@@ -54,7 +55,7 @@ class SRDNet(nn.Module):
         feats_x = self.backbone(x, only_feat=True)[-2]
         logits_x = self.backbone(x, feat_s=feats_x)
         feats_x = self.connector(feats_x)
-        # 不同模型输出通道可能不一致，需要插值
+        # 不同模型输出特征图维度可能不一致，需要插值
         if(self.feat_s_shape[2] != self.feat_t_shape[2]):
             feats_x = F.interpolate(feats_x, size=(self.feat_t_shape[2], self.feat_t_shape[3]), mode='bilinear', align_corners=True)
         return_dict = {
