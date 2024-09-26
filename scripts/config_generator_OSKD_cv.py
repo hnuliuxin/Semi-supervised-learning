@@ -158,7 +158,8 @@ def exp_OSKD_cv(label_amount):
         "crd",
         "srd",
         "fitnet",
-        "dtkd"
+        "dtkd",
+        "pad"
     ]
 
     nets = [
@@ -213,6 +214,10 @@ def exp_OSKD_cv(label_amount):
 
                         lr = 5e-4
                         layer_decay = 0.5
+
+                    if alg == "dtkd":
+                        lr = 5e-3
+                        
                     
                     port = dist_port[count]
                     cfg = create_ossl_cv_config(
@@ -239,7 +244,7 @@ if __name__ == "__main__":
         os.makedirs("./saved_models/OSKD_cv/", exist_ok=True)
     if not os.path.exists("./config/OSKD_cv/"):
         os.makedirs("./config/OSKD_cv/", exist_ok=True)
-    label_amount = {"s": [2, 2], "m": [4, 4], "l":[25, 25], "full":[500, 500]}
+    label_amount = {"s": [2, 2], "m": [25, 25], "l":[100,100], "full":[500, 500]}
     for i in label_amount:
         exp_OSKD_cv(label_amount=label_amount[i])
 

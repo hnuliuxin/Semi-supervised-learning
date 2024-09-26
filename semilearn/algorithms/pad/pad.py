@@ -25,13 +25,14 @@ class PADNet(nn.Module):
         nn.init.xavier_normal_(self.var_estimator[0].weight)
         nn.init.constant_(self.var_estimator[1].weight, 1)
         nn.init.constant_(self.var_estimator[1].bias, 0)    
-        for param in self.var_estimator.parameters():
-            param.requires_grad = False
+        # for param in self.var_estimator.parameters():
+        #     param.requires_grad = False
 
     def forward(self, x, **kwargs):
         feats_x = self.backbone(x, only_feat=True)[-1]
-        logits_x = self.backbone(x, feat_s=feats_x)
-        feats_x = self.connector(feats_x)
+        logits_x = self.backbone(feats_x, only_fc=True)
+        if self.feat_s_shape[1] != self.feat_t_shape[1]:
+            feats_x = self.connector(feats_x)
 
         log_variances = self.var_estimator(feats_x)
 
@@ -71,10 +72,11 @@ class PAD(AlgorithmBase):
         super().__init__(args, net_builder, tb_log, logger, teacher_net_builder, **kwargs)
         self.init(T=args.T, gamma=args.gamma, alpha=args.alpha)
 
-    def init(self, T, gamma=1, alpha=1):
+    def init(self, T=1, gamma=1, alpha=1):
         self.T = T
         self.gamma = gamma
         self.alpha = alpha
+        self.eps = 1e-6
         with torch.no_grad():
             self.model.eval()
             self.teacher_model.eval()
@@ -93,10 +95,10 @@ class PAD(AlgorithmBase):
             input = torch.cat([x_lb, x_ulb_w], dim=0) if x_ulb_w is not None else x_lb
             batch_size = x_lb.shape[0]
 
-            outs_x_lb = self.model(input)
-            logits_x_lb = outs_x_lb['logits']
-            feats_x_lb = outs_x_lb['feat']
-            log_variances = outs_x_lb['log_var']
+            outs_x = self.model(input)
+            logits_x = outs_x['logits']
+            feats_x = outs_x['feat']
+            log_variances = outs_x['log_var']
 
             self.teacher_model.eval()
             with torch.no_grad():
@@ -104,20 +106,20 @@ class PAD(AlgorithmBase):
                 logits_x_teacher = outs_x_teacher['logits']
                 feats_x_teacher = outs_x_teacher['feat'][-1]
 
-            sup_loss = self.ce_loss(logits_x_lb[:batch_size], logits_x_teacher[:batch_size])
+            sup_loss = self.ce_loss(logits_x[:batch_size], y_lb, reduction='mean')
 
             if self.it / 2048 < 130:
-                kd_loss = self.consistency_loss(feats_x_lb, feats_x_teacher, name = "mse")
+                kd_loss = self.consistency_loss(feats_x, feats_x_teacher, name = "mse")
             else:
                 kd_loss = torch.mean(
-                    (feats_x_lb - feats_x_teacher) ** 2 / (self.eps + torch.exp(log_variances))
+                    (feats_x - feats_x_teacher) ** 2 / (self.eps + torch.exp(log_variances))
                     + log_variances, dim=1)
 
-            total_loss = sup_loss * self.gamma + kd_loss.mean() * self.alpha
+            total_loss = sup_loss * self.gamma + kd_loss * self.alpha
 
         out_dict = self.process_out_dict(loss=total_loss)
         log_dict = self.process_log_dict(sup_loss=sup_loss.item(), 
-                                         kd_loss=kd_loss.mean().item())
+                                         kd_loss=kd_loss.item())
         return out_dict, log_dict
     
     def get_save_dict(self):
@@ -137,8 +139,8 @@ class PAD(AlgorithmBase):
     @staticmethod
     def get_argument():
         return [
-            SSL_Argument('T', default=1, type=float, help='Temperature for distillation smoothing'),
-            SSL_Argument('gamma', default=1, type=float, help='weight for classification'),
-            SSL_Argument('alpha', default=1, type=float, help='weight balance for KD')
+            SSL_Argument('--T', default=1, type=float, help='Temperature for distillation smoothing'),
+            SSL_Argument('--gamma', default=1, type=float, help='weight for classification'),
+            SSL_Argument('--alpha', default=1, type=float, help='weight balance for KD')
         ]
 
