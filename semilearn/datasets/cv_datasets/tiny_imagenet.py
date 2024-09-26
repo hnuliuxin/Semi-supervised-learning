@@ -99,8 +99,6 @@ def get_tiny_imagenet(args, alg, name, num_labels, num_classes, data_dir='./data
     
     val_set = TinyImageNetValidation(val_path, label_to_index, transform=transform_val)
 
-
-    #TODO 是否需要transform
     if is_all_ulb:
         ulb_dset = BasicDataset(alg, data, None, num_classes, transform_weak, True, transform_medium, transform_strong, False, data_type='pil')
         return None, ulb_dset, None

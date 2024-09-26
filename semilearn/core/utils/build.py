@@ -7,7 +7,7 @@ import logging
 import random
 import torch
 import torch.distributed as dist
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, ConcatDataset
 from semilearn.datasets import get_collactor, name2sampler
 from semilearn.nets.utils import param_groups_layer_decay, param_groups_weight_decay
 
@@ -87,11 +87,11 @@ def get_dataset(args, algorithm, dataset, num_labels, num_classes, data_dir='./d
         lb_dset, _, eval_dset = get_cifar(args, algorithm, "cifar100", num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)
         ulb_dset, _, _ = get_places365(args, algorithm, "places365", num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb, is_all_ulb=True)
         test_dset = None
-    # TODO 添加开集半监督数据集，cifar100_and_tiny_imagenet等
     elif dataset == "cifar100_and_tiny_imagenet":
         lb_dset, ulb_dset, eval_dset = get_cifar(args, algorithm, "cifar100", num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)
-        _, ulb_dset2, _ = get_tiny_imagenet(args, algorithm, "tiny_imagenet", num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)
-    
+        _, ulb_dset2, _ = get_tiny_imagenet(args, algorithm, "tiny_imagenet", num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb, is_all_ulb=True)
+        ulb_dset = ConcatDataset([ulb_dset, ulb_dset2])
+        test_dset = None
     elif dataset in ["tissuemnist"]:
         lb_dset, ulb_dset, eval_dset = get_medmnist(args, algorithm, dataset, num_labels, num_classes, data_dir=data_dir,  include_lb_to_ulb=include_lb_to_ulb)
         test_dset = None
