@@ -16,8 +16,8 @@ std['places365'] = [0.229, 0.224, 0.225]
 def get_places365(args, alg, name, num_labels, num_classes, data_dir='./data', include_lb_to_ulb=True, is_all_ulb=False):
     
     data_dir = os.path.join(data_dir, name.lower())
-    dset = getattr(torchvision.datasets, name.upper())
-    dset = dset(data_dir, split='train', download=True)
+    dset = getattr(torchvision.datasets, 'Places365')
+    dset = dset(data_dir, split='train-standard', download=True)
     data, targets = dset.data, dset.targets
     crop_size = args.img_size
     crop_ratio = args.crop_ratio

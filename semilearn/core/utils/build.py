@@ -76,16 +76,15 @@ def get_dataset(args, algorithm, dataset, num_labels, num_classes, data_dir='./d
     if dataset == "eurosat":
         lb_dset, ulb_dset, eval_dset = get_eurosat(args, algorithm, dataset, num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)
         test_dset = None
+    elif dataset in ["cifar10", "cifar100"]:
+        lb_dset, ulb_dset, eval_dset = get_cifar(args, algorithm, dataset, num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)
+        test_dset = None
     elif dataset == "tiny_imagenet":
         lb_dset, ulb_dset, eval_dset = get_tiny_imagenet(args, algorithm, dataset, num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)
         test_dset = None
     elif dataset == "cifar100_with_tiny_imagenet":
         lb_dset, _, eval_dset = get_cifar(args, algorithm, "cifar100", num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)
         _, ulb_dset, _ = get_tiny_imagenet(args, algorithm, "tiny_imagenet", num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb, is_all_ulb=True)
-        test_dset = None
-    elif dataset == "cifar100_with_places365":
-        lb_dset, _, eval_dset = get_cifar(args, algorithm, "cifar100", num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)
-        ulb_dset, _, _ = get_places365(args, algorithm, "places365", num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb, is_all_ulb=True)
         test_dset = None
     elif dataset == "cifar100_and_tiny_imagenet":
         lb_dset, ulb_dset, eval_dset = get_cifar(args, algorithm, "cifar100", num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)
@@ -106,9 +105,7 @@ def get_dataset(args, algorithm, dataset, num_labels, num_classes, data_dir='./d
     elif dataset == "semi_aves_out":
         lb_dset, ulb_dset, eval_dset = get_semi_aves(args, algorithm, "semi_aves", train_split='l_train_val', ulb_split='u_train_out', data_dir=data_dir)
         test_dset = None
-    elif dataset in ["cifar10", "cifar100"]:
-        lb_dset, ulb_dset, eval_dset = get_cifar(args, algorithm, dataset, num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)
-        test_dset = None
+    
     elif dataset == 'svhn':
         lb_dset, ulb_dset, eval_dset = get_svhn(args, algorithm, dataset, num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)
         test_dset = None
