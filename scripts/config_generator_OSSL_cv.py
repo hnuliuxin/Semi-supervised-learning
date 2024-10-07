@@ -1,13 +1,15 @@
 import os
 
 def create_configuration(cfg, cfg_file):
-    cfg["save_name"] = "{alg}_{dataset}_{num_lb}_{net}_{seed}".format(
+    cfg["save_name"] = "{alg}_{dataset}_{net}_{num_class}_{num_per_class}_{seed}".format(
         alg=cfg["algorithm"],
         dataset=cfg["dataset"],
-        num_lb=cfg["num_labels"],
         net=cfg["net"],
-        seed=cfg["seed"],
+        num_class=cfg["num_classes"],   
+        num_per_class=cfg["num_labels"],
+        seed=cfg["seed"]
     )
+    # print(cfg["save_name"])
     # resume
     cfg["resume"] = True
     cfg["load_path"] = "{}/{}/latest_model.pth".format(
@@ -28,7 +30,7 @@ def create_configuration(cfg, cfg_file):
             w.writelines(line)
             w.write("\n")
 
-def create_OSSL_cv_config(
+def create_ossl_cv_config(
     alg,
     seed,
     dataset,
@@ -41,6 +43,7 @@ def create_OSSL_cv_config(
     lr,
     lr_decay_epochs,
     weight_decay,
+    layer_decay=1,
     warmup=5,
     amp=False,
 ):
@@ -48,7 +51,7 @@ def create_OSSL_cv_config(
     cfg["algorithm"] = alg
 
     # save config
-    cfg["save_dir"] = "./saved_models/OSSL_cv/"
+    cfg["save_dir"] = "./saved_models/ossl_cv/"
     cfg["save_name"] = None
     cfg["resume"] = False
     cfg["load_path"] = None
@@ -57,20 +60,12 @@ def create_OSSL_cv_config(
     cfg["use_wandb"] = False
     cfg["use_aim"] = False
 
-    if dataset == "imagenet":
-        cfg["epoch"] = 500
-        cfg["num_train_iter"] = 1024 * 500
-        cfg["num_log_iter"] = 256
-        cfg["num_eval_iter"] = 5120
-        cfg["batch_size"] = 256
-        cfg["eval_batch_size"] = 512
-    else:
-        cfg["epoch"] = 200
-        cfg["num_train_iter"] = 1024 * 200
-        cfg["num_log_iter"] = 256
-        cfg["num_eval_iter"] = 2048
-        cfg["batch_size"] = 8
-        cfg["eval_batch_size"] = 16
+    cfg["epoch"] = 200
+    cfg["num_train_iter"] = 1024 * 200
+    cfg["num_log_iter"] = 256
+    cfg["num_eval_iter"] = 2048
+    cfg["batch_size"] = 8
+    cfg["eval_batch_size"] = 16
 
     cfg["num_warmup_iter"] = int(1024 * warmup)
     cfg["num_labels"] = num_labels
@@ -86,91 +81,17 @@ def create_OSSL_cv_config(
         if dataset == "imagenet":
             cfg["ulb_loss_ratio"] = 10.0
             cfg["p_cutoff"] = 0.7
-    elif alg == "uda":
-        cfg["tsa_schedule"] = "none"
-        cfg["T"] = 0.4
-        cfg["p_cutoff"] = 0.8
-        cfg["ulb_loss_ratio"] = 1.0
-        if dataset == "imagenet":
-            cfg["ulb_loss_ratio"] = 10.0
+
     elif alg == "pseudolabel":
         cfg["p_cutoff"] = 0.95
         cfg["ulb_loss_ratio"] = 1.0
         cfg["unsup_warm_up"] = 0.4
-    elif alg == "mixmatch":
-        cfg["mixup_alpha"] = 0.5
-        cfg["T"] = 0.5
-        cfg["ulb_loss_ratio"] = 10
-        cfg["unsup_warm_up"] = 0.4  # 16000 / 1024 / 1024
-    elif alg == "remixmatch":
-        cfg["mixup_alpha"] = 0.75
-        cfg["T"] = 0.5
-        cfg["kl_loss_ratio"] = 0.5
-        cfg["ulb_loss_ratio"] = 1.5
-        cfg["rot_loss_ratio"] = 0.5
-        cfg["unsup_warm_up"] = 1 / 64
-    elif alg == "crmatch":
-        cfg["hard_label"] = True
-        cfg["p_cutoff"] = 0.95
-        cfg["ulb_loss_ratio"] = 1.0
-
-    elif alg == "comatch":
-        cfg["hard_label"] = False
-        cfg["p_cutoff"] = 0.95
-        cfg["contrast_p_cutoff"] = 0.8
-        cfg["contrast_loss_ratio"] = 1.0
-        cfg["ulb_loss_ratio"] = 1.0
-        cfg["proj_size"] = 64
-        cfg["queue_batch"] = 32
-        cfg["smoothing_alpha"] = 0.9
-        cfg["T"] = 0.2
-        cfg["da_len"] = 32
-        cfg["ema_m"] = 0.999
-        if dataset == "stl10":
-            cfg["contrast_loss_ratio"] = 5.0
-
-        if dataset == "imagenet":
-            cfg["p_cutoff"] = 0.6
-            cfg["contrast_p_cutoff"] = 0.3
-            cfg["contrast_loss_ratio"] = 10.0
-            cfg["ulb_loss_ratio"] = 10.0
-            cfg["smoothing_alpha"] = 0.9
-            cfg["T"] = 0.1
-            cfg["proj_size"] = 128
-            cfg["queue_batch"] = 128
-
-    elif alg == "simmatch":
-        cfg["p_cutoff"] = 0.95
-        cfg["in_loss_ratio"] = 1.0
-        cfg["ulb_loss_ratio"] = 1.0
-        cfg["proj_size"] = 128
-        cfg["K"] = 256
-        cfg["da_len"] = 32
-        cfg["smoothing_alpha"] = 0.9
-        cfg["ema_m"] = 0.999
-
-        if dataset in ["cifar10", "svhn", "cifar100", "stl10"]:
-            cfg["T"] = 0.1
-        else:
-            cfg["T"] = 0.2
-
-        if dataset == "imagenet":
-            cfg["in_loss_ratio"] = 5.0
-            cfg["ulb_loss_ratio"] = 10.0
-            cfg["T"] = 0.1
-            cfg["p_cutoff"] = 0.7
-            cfg["da_len"] = 256
-            cfg["ema_m"] = 0.999
 
     elif alg == "meanteacher":
         cfg["ulb_loss_ratio"] = 50
         cfg["unsup_warm_up"] = 0.4
         cfg["ema_m"] = 0.999
 
-    elif alg == "pimodel":
-        cfg["ulb_loss_ratio"] = 10
-
-        cfg["unsup_warm_up"] = 0.4
     elif alg == "dash":
         cfg["gamma"] = 1.27
         cfg["C"] = 1.0001
@@ -180,17 +101,6 @@ def create_OSSL_cv_config(
         cfg["p_cutoff"] = 0.95
         cfg["ulb_loss_ratio"] = 1.0
 
-    elif alg == "mpl":
-        cfg["tsa_schedule"] = "none"
-        cfg["T"] = 0.7
-        cfg["p_cutoff"] = 0.6
-        cfg["ulb_loss_ratio"] = 8.0
-
-        cfg["teacher_lr"] = 0.03
-        cfg["label_smoothing"] = 0.1
-        cfg["num_uda_warmup_iter"] = 5000
-        cfg["num_stu_wait_iter"] = 3000
-
     elif alg == "iomatch":
         cfg["ema_m"] = 0.999
 
@@ -198,9 +108,10 @@ def create_OSSL_cv_config(
     cfg["crop_ratio"] = crop_ratio
 
     # optim config
-    cfg["optim"] = "AdamW"
+    cfg["optim"] = "SGD"
     cfg["lr"] = lr
     cfg["layer_decay"] = layer_decay
+    cfg["lr_decay_epochs"] = lr_decay_epochs
     cfg["momentum"] = 0.9
     cfg["weight_decay"] = weight_decay
     cfg["amp"] = amp
@@ -229,19 +140,15 @@ def create_OSSL_cv_config(
     cfg["dist_backend"] = "nccl"
     cfg["gpu"] = None
 
-    if alg == "crmatch" and dataset == "stl10":
-        cfg["multiprocessing_distributed"] = False
-        cfg["gpu"] = 0
-
     # other config
     cfg["overwrite"] = True
     cfg["use_pretrain"] = False
 
     return cfg
 
-def exp_OSSL_cv(label_amount, class_amount):
-    config_file = r"./config/OSSL_cv/"
-    save_path = r"./saved_models/OSSL_cv"
+def exp_ossl_cv(label_amount, class_amount):
+    config_file = r"./config/ossl_cv/"
+    save_path = r"./saved_models/ossl_cv"
 
     if not os.path.exists(config_file):
         os.mkdir(config_file)
@@ -249,24 +156,23 @@ def exp_OSSL_cv(label_amount, class_amount):
         os.mkdir(save_path)
     
     algs = [
-        "fixmatch",
-        "pseudolabel",
-        "meanteacher",
-        "dash",
+        # "fixmatch",
+        # "pseudolabel",
+        # "meanteacher",
+        # "dash",
         "supervised",
-        "iomatch",
+        # "iomatch",
     ]
 
     nets = [
         "resnet8x4",
         "resnet32x4",
-        "wrn_16_1",
-        "wrn_40_1",
-        "shuffleV1",
-        "vgg8",
-        "vgg13",
-        "resnet32x4",
-        "wrn_40_2"
+        # "wrn_16_1",
+        # "wrn_40_1",
+        # "shuffleV1",
+        # "vgg8",
+        # "vgg13",
+        # "wrn_40_2"
     ]
 
     datasets = [
@@ -293,49 +199,54 @@ def exp_OSSL_cv(label_amount, class_amount):
                     if dataset == "cinic10":
                         num_classes = 10
                         num_labels = label_amount[0] 
-                        seen_clss = class_amount[0]
+                        seen_class = class_amount[0]
                         crop_ratio = 0.875
+                    # elif dataset == "cifar100_and_tin":
+                    #     num_classes = 100
+                    #     num_labels = label_amount[2] 
+                    #     seen_class = class_amount[2]
+                    #     crop_ratio = 0.875
                     else:
                         num_classes = 100
                         num_labels = label_amount[1] 
-                        seen_calss = class_amount[1]
+                        seen_class = class_amount[1]
                         crop_ratio = 0.875
-
-                    print(
-                        "alg: {}, dataset: {}, net: {}, label_amount: {}, class_amount: {}".format(
-                            alg, dataset, net, num_labels, seen_calss
-                        )
-                    )
+                    # if seed == 0:
+                    #     print(
+                    #         "alg: {}, dataset: {}, net: {}, num per class: {}, class_amount: {}".format(
+                    #             alg, dataset, net, num_labels, seen_class
+                    #         )
+                    #     )
                     port = dist_port[count]
-                    # cfg = create_OSSL_cv_config(
-                    #     alg,
-                    #     seed,
-                    #     dataset,
-                    #     net,
-                    #     num_classes,
-                    #     num_labels,
-                    #     img_size,
-                    #     crop_ratio,
-                    #     port,
-                    #     lr,
-                    #     lr_decay_epochs,
-                    #     weight_decay,
-                    #     warmup,
-                    #     amp,
-                    # )
+                    cfg = create_ossl_cv_config(
+                        alg,
+                        seed,
+                        dataset,
+                        net,
+                        seen_class,
+                        num_labels,
+                        img_size,
+                        crop_ratio,
+                        port,
+                        lr,
+                        lr_decay_epochs,
+                        weight_decay,
+                        warmup,
+                        amp,
+                    )
                     count += 1
-                    # create_configuration(cfg, config_file)
+                    create_configuration(cfg, config_file)
 
 if __name__ == "__main__":
-    if not os.path.exists("./saved_models/OSSL_cv/"):
-        os.makedirs("./saved_models/OSSL_cv/", exist_ok=True)
-    if not os.path.exists("./config/OSSL_cv/"):
-        os.makedirs("./config/OSSL_cv/", exist_ok=True)
-    label_per_class = {"s": [18000, 100], "m": [36000,200], "l":[54000,300], "sl":[72000,400], "full":[90000, 500]}
-    seen_class = {"s": [3, 40], "m": [5,60], "l":[7,80], "full":[10, 100]}
+    if not os.path.exists("./saved_models/ossl_cv/"):
+        os.makedirs("./saved_models/ossl_cv/", exist_ok=True)
+    if not os.path.exists("./config/ossl_cv/"):
+        os.makedirs("./config/ossl_cv/", exist_ok=True)
+    label_per_class = {"s": [1800, 100], "m": [3600,200], "l":[5400,300], "sl":[7200,400], "full":[9000, 500]}
+    seen_class = {"s": [3, 100], "m": [5,150], "l":[7,200]}
 
     for i in label_per_class:
         for j in seen_class:
-            exp_OSSL_cv(label_amount=label_per_class[i], class_amount=seen_class[j])
+            exp_ossl_cv(label_amount=label_per_class[i], class_amount=seen_class[j])
 
 
