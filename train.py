@@ -91,7 +91,7 @@ def get_config():
     Optimizer configurations
     """
     parser.add_argument("--optim", type=str, default="SGD")
-    parser.add_argument("--lr", type=float, default=3e-2)
+    parser.add_argument("--lr", type=float, default=5e-2)
     parser.add_argument("--momentum", type=float, default=0.9)
     parser.add_argument("--weight_decay", type=float, default=5e-4)
     parser.add_argument(

@@ -68,9 +68,9 @@ if __name__ == "__main__":
     eval_dset = dataset_dict['eval']
     eval_loader = DataLoader(eval_dset, batch_size=args.batch_size, drop_last=False, shuffle=False, num_workers=4)
     # 查看第一个batch 的类型
-    for data in eval_loader:
-        print(data['y_lb'][:5])
-        break
+    # for data in eval_loader:
+    #     print(data['y_lb'][:5])
+    #     break
 
     acc = 0.0
     test_feats = []
@@ -83,7 +83,7 @@ if __name__ == "__main__":
             target = data['y_lb']
 
             image = image.type(torch.FloatTensor).cuda()
-            feat = net(image, only_feat=True)
+            feat = net(image, only_feat=True)[-1]
             logit = net(feat, only_fc=True)
             prob = logit.softmax(dim=-1)
             pred = prob.argmax(1)
