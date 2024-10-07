@@ -39,8 +39,8 @@ def create_OSSL_cv_config(
     crop_ratio,
     port,
     lr,
+    lr_decay_epochs,
     weight_decay,
-    layer_decay,
     warmup=5,
     amp=False,
 ):
@@ -239,7 +239,7 @@ def create_OSSL_cv_config(
 
     return cfg
 
-def exp_OSSL_cv(label_amount):
+def exp_OSSL_cv(label_amount, class_amount):
     config_file = r"./config/OSSL_cv/"
     save_path = r"./saved_models/OSSL_cv"
 
@@ -250,33 +250,19 @@ def exp_OSSL_cv(label_amount):
     
     algs = [
         "fixmatch",
-        "uda",
         "pseudolabel",
-        "mixmatch",
-        "remixmatch",
-        "crmatch",
-        "comatch",
-        "simmatch",
         "meanteacher",
-        "pimodel",
         "dash",
-        "fullysupervised",
         "supervised",
         "iomatch",
-        "openmatch"
     ]
 
     nets = [
         "resnet8x4",
         "resnet32x4",
-        "resnet50",
-        "resnet18",
-        "vit_tiny_patch2_32",
         "wrn_16_1",
         "wrn_40_1",
-        "mobilenet",
         "shuffleV1",
-        "shuffleV2",
         "vgg8",
         "vgg13",
         "resnet32x4",
@@ -284,72 +270,72 @@ def exp_OSSL_cv(label_amount):
     ]
 
     datasets = [
-        "cifar100_with_tiny_imagenet",
-        "cifar100_with_places365", 
-        "cifar100", 
-        "tiny_imagenet", 
-        "cifar100_and_tiny_imagenet", 
-        "cifar100_and_places365"
+        "cifar100_with_tin",
+        "cinic10"
     ]
     seeds = [0, 1, 2]
 
-    dist_port = range(10001, 15120, 1)
+    dist_port = range(10001, 25120, 1)
     count = 0
 
     weight_decay = 5e-4
-    # lr = 5e-5
+    lr = 5e-2
+    lr_decay_epochs = "100,150,180"
     warmup = 0
     amp = False
+    img_size = 32
 
     for alg in algs:
         for dataset in datasets:
             for net in nets:
                 for seed in seeds:
                     # changes for each dataset
-                    if dataset == "tiny_imagenet":
-                        num_classes = 200
-                        num_labels = label_amount[1] * num_classes
-                        img_size = 32
+                    if dataset == "cinic10":
+                        num_classes = 10
+                        num_labels = label_amount[0] 
+                        seen_clss = class_amount[0]
                         crop_ratio = 0.875
-
-                        lr = 5e-2
-                        layer_decay = 0.5
                     else:
                         num_classes = 100
-                        num_labels = label_amount[0] * num_classes
-                        img_size = 32
+                        num_labels = label_amount[1] 
+                        seen_calss = class_amount[1]
                         crop_ratio = 0.875
 
-                        lr = 5e-2
-                        layer_decay = 0.5
-                    
-                    port = dist_port[count]
-                    cfg = create_OSSL_cv_config(
-                        alg,
-                        seed,
-                        dataset,
-                        net,
-                        num_classes,
-                        num_labels,
-                        img_size,
-                        crop_ratio,
-                        port,
-                        lr,
-                        weight_decay,
-                        layer_decay,
-                        warmup,
-                        amp,
+                    print(
+                        "alg: {}, dataset: {}, net: {}, label_amount: {}, class_amount: {}".format(
+                            alg, dataset, net, num_labels, seen_calss
+                        )
                     )
+                    port = dist_port[count]
+                    # cfg = create_OSSL_cv_config(
+                    #     alg,
+                    #     seed,
+                    #     dataset,
+                    #     net,
+                    #     num_classes,
+                    #     num_labels,
+                    #     img_size,
+                    #     crop_ratio,
+                    #     port,
+                    #     lr,
+                    #     lr_decay_epochs,
+                    #     weight_decay,
+                    #     warmup,
+                    #     amp,
+                    # )
                     count += 1
-                    create_configuration(cfg, config_file)
+                    # create_configuration(cfg, config_file)
 
 if __name__ == "__main__":
     if not os.path.exists("./saved_models/OSSL_cv/"):
         os.makedirs("./saved_models/OSSL_cv/", exist_ok=True)
     if not os.path.exists("./config/OSSL_cv/"):
         os.makedirs("./config/OSSL_cv/", exist_ok=True)
-    label_amount = {"s": [100, 100], "m": [200,200], "l":[300,300], "sl":[400,400], "full":[500, 500]}
-    for i in label_amount:
-        exp_OSSL_cv(label_amount=label_amount[i])
+    label_per_class = {"s": [18000, 100], "m": [36000,200], "l":[54000,300], "sl":[72000,400], "full":[90000, 500]}
+    seen_class = {"s": [3, 40], "m": [5,60], "l":[7,80], "full":[10, 100]}
+
+    for i in label_per_class:
+        for j in seen_class:
+            exp_OSSL_cv(label_amount=label_per_class[i], class_amount=seen_class[j])
 
 
