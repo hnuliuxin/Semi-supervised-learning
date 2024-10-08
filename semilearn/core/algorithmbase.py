@@ -184,7 +184,11 @@ class AlgorithmBase:
         """
         self.print_fn("Create optimizer and scheduler")
         optimizer = get_optimizer(self.model, self.args.optim, self.args.lr, self.args.momentum, self.args.weight_decay, self.args.layer_decay)
-        scheduler = get_cosine_schedule_with_warmup(optimizer,
+        if self.lr_decay_epochs is not None:
+            self.lr_decay_epochs = [int(x) for x in self.lr_decay_epochs.split(',')]
+            scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=self.lr_decay_epochs, gamma=0.1)
+        else:
+            scheduler = get_cosine_schedule_with_warmup(optimizer,
                                                     self.num_train_iter,
                                                     num_warmup_steps=self.args.num_warmup_iter)
         return optimizer, scheduler
