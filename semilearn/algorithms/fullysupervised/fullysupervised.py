@@ -37,12 +37,16 @@ class FullySupervised(AlgorithmBase):
 
     
     def train(self):
+        self.ep=0
         # lb: labeled, ulb: unlabeled
         self.model.train()
         self.call_hook("before_run")
             
         for epoch in range(self.start_epoch, self.epochs):
             self.epoch = epoch
+            if self.rank == 0:
+                print("now epoch",self.epoch)
+                print("now ep",self.ep)
             
             # prevent the training iterations exceed args.num_train_iter
             if self.it > self.num_train_iter:
@@ -62,6 +66,7 @@ class FullySupervised(AlgorithmBase):
                 self.it += 1
 
             self.call_hook("after_train_epoch")
+            self.scheduler.step()
         self.call_hook("after_run")
 
 

@@ -57,72 +57,31 @@ def get_logger(name, save_path=None, level='INFO'):
     return logger
 
 
-def get_dataset(args, algorithm, dataset, num_labels, num_classes, data_dir='./data', include_lb_to_ulb=True):
+def get_dataset(args, algorithm, data_dir='./data', include_lb_to_ulb=True):
     """
     create dataset
 
     Args
         args: argparse arguments
         algorithm: algorithm name, used for specific return items in __getitem__ of datasets
-        dataset: dataset name 
-        num_labels: number of labeled data in dataset
-        num_classes: number of classes
         data_dir: data folder
         include_lb_to_ulb: flag of including labeled data into unlabeled data
     """
-    from semilearn.datasets import get_eurosat, get_medmnist, get_semi_aves, get_cifar, get_svhn, get_stl10, get_imagenet, get_json_dset, get_pkl_dset, get_tiny_imagenet, get_places365
+
+    dataset = args.dataset
+    num_classes = args.num_classes
+    from semilearn.datasets import get_cifar, get_tiny_imagenet
 
     # 在此处添加新的数据集
-    if dataset == "eurosat":
-        lb_dset, ulb_dset, eval_dset = get_eurosat(args, algorithm, dataset, num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)
+    if dataset == "cifar100_with_tin":
+        lb_dset, ulb_dset1, eval_dset = get_cifar(args, algorithm, "cifar100", data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)
+        _, ulb_dset2, _ = get_tiny_imagenet(args, algorithm, "tiny_imagenet", data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb, is_all_ulb=True)
+        ulb_dset = ConcatDataset([ulb_dset1, ulb_dset2])
         test_dset = None
-    elif dataset in ["cifar10", "cifar100"]:
-        lb_dset, ulb_dset, eval_dset = get_cifar(args, algorithm, dataset, num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)
+    elif dataset == "cinic10":
+        lb_dset, ulb_dset, eval_dset= get_cinic10(args, algorithm, "cinic10", data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)
         test_dset = None
-    elif dataset == "tiny_imagenet":
-        lb_dset, ulb_dset, eval_dset = get_tiny_imagenet(args, algorithm, dataset, num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)
-        test_dset = None
-    elif dataset == "cifar100_with_tiny_imagenet":
-        lb_dset, _, eval_dset = get_cifar(args, algorithm, "cifar100", num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)
-        _, ulb_dset, _ = get_tiny_imagenet(args, algorithm, "tiny_imagenet", num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb, is_all_ulb=True)
-        test_dset = None
-    elif dataset == "cifar100_and_tiny_imagenet":
-        lb_dset, ulb_dset, eval_dset = get_cifar(args, algorithm, "cifar100", num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)
-        _, ulb_dset2, _ = get_tiny_imagenet(args, algorithm, "tiny_imagenet", num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb, is_all_ulb=True)
-        ulb_dset = ConcatDataset([ulb_dset, ulb_dset2])
-        test_dset = None
-    elif dataset == "cifar100_and_places365":
-        lb_dset, ulb_dset, eval_dset = get_cifar(args, algorithm, "cifar100", num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)
-        _, ulb_dset2, _ = get_places365(args, algorithm, "places365", num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb, is_all_ulb=True)
-        ulb_dset = ConcatDataset([ulb_dset, ulb_dset2])
-        test_dset = None
-    elif dataset in ["tissuemnist"]:
-        lb_dset, ulb_dset, eval_dset = get_medmnist(args, algorithm, dataset, num_labels, num_classes, data_dir=data_dir,  include_lb_to_ulb=include_lb_to_ulb)
-        test_dset = None
-    elif dataset in ["semi_aves", "semi_inat"]:
-        lb_dset, ulb_dset, eval_dset = get_semi_aves(args, algorithm, dataset, train_split='l_train_val', data_dir=data_dir)
-        test_dset = None
-    elif dataset == "semi_aves_out":
-        lb_dset, ulb_dset, eval_dset = get_semi_aves(args, algorithm, "semi_aves", train_split='l_train_val', ulb_split='u_train_out', data_dir=data_dir)
-        test_dset = None
-    
-    elif dataset == 'svhn':
-        lb_dset, ulb_dset, eval_dset = get_svhn(args, algorithm, dataset, num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)
-        test_dset = None
-    elif dataset == 'stl10':
-        lb_dset, ulb_dset, eval_dset = get_stl10(args, algorithm, dataset, num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)
-        test_dset = None
-    elif dataset in ["imagenet", "imagenet127"]:
-        lb_dset, ulb_dset, eval_dset = get_imagenet(args, algorithm, dataset, num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)
-        test_dset = None
-    # speech dataset
-    elif dataset in ['esc50', 'fsdnoisy', 'gtzan', 'superbks', 'superbsi', 'urbansound8k']:
-        lb_dset, ulb_dset, eval_dset, test_dset = get_pkl_dset(args, algorithm, dataset, num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)
-    elif dataset in ['aclImdb', 'ag_news', 'amazon_review', 'dbpedia', 'yahoo_answers', 'yelp_review']:
-        lb_dset, ulb_dset, eval_dset, test_dset = get_json_dset(args, algorithm, dataset, num_labels, num_classes, data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)
-    else:
-        return None
-    
+
     dataset_dict = {'train_lb': lb_dset, 'train_ulb': ulb_dset, 'eval': eval_dset, 'test': test_dset}
     return dataset_dict
 

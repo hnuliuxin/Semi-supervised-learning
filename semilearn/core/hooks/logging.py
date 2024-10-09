@@ -21,6 +21,7 @@ class LoggingHook(Hook):
                         print_text += " "
 
                 print_text += "BEST_EVAL_ACC: {:.6f}, at {:d} iters".format(algorithm.best_eval_acc, algorithm.best_it + 1)
+                # print_text += "NOW_EPOCH:{:d}".format(algorithm.it / ) 
                 # algorithm.print_fn(f"{algorithm.it + 1} iteration, USE_EMA: {algorithm.ema_m != 0}, {algorithm.log_dict}, BEST_EVAL_ACC: {algorithm.best_eval_acc}, at {algorithm.best_it + 1} iters")
                 algorithm.print_fn(print_text)
             

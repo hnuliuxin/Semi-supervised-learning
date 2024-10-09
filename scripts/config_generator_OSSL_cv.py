@@ -195,6 +195,7 @@ def exp_ossl_cv(ID_labels_per_class, ID_classes, OOD_classes):
     weight_decay = 5e-4
     lr = 5e-2
     lr_decay_epochs = "100,150,180"
+    layer_decay = 1.0
     warmup = 0
     amp = False
     img_size = 32
@@ -233,6 +234,7 @@ def exp_ossl_cv(ID_labels_per_class, ID_classes, OOD_classes):
                         lr,
                         lr_decay_epochs,
                         weight_decay,
+                        layer_decay,
                         warmup,
                         amp,
                     )
@@ -245,7 +247,7 @@ if __name__ == "__main__":
     if not os.path.exists("./config/ossl_cv/"):
         os.makedirs("./config/ossl_cv/", exist_ok=True)
     ID_labels_per_class = {"s": [1800, 100], "m": [3600,200], "l":[5400,300], "sl":[7200,400], "full":[9000, 500]}
-    ID_classes = {"s": [3, 100], "m": [5, 150], "l":[7, 200]}
+    ID_classes = {"s": [3, 30], "m": [5, 50], "l":[7, 70]}
     OOD_classes = {"s": [100], "m": [150], "l":[200]}
 
     for i in ID_labels_per_class:

@@ -48,7 +48,11 @@ mean, std = {}, {}
 mean['tiny_imagenet'] = [0.4802, 0.4481, 0.3975]
 std['tiny_imagenet'] = [0.2770, 0.2691, 0.2821]
 
-def get_tiny_imagenet(args, alg, name, num_labels, num_classes, data_dir='./data', include_lb_to_ulb=True, is_all_ulb=False):
+def get_tiny_imagenet(args, alg, name, num_classes=200, data_dir='./data', include_lb_to_ulb=True, is_all_ulb=False):
+    ood_classes = args.OOD_classes
+    ood_labels_per_class = args.OOD_labels_per_class
+    num_labels = ood_labels_per_class * num_classes
+
     data_dir = os.path.join(data_dir, name.lower())
     train_path = os.path.join(data_dir, 'train')
     val_path = os.path.join(data_dir, 'val')
@@ -59,8 +63,14 @@ def get_tiny_imagenet(args, alg, name, num_labels, num_classes, data_dir='./data
     
 
     data, targets = train_set.samples, train_set.targets
-    # print("data: ", data[0])
-    # print("targets: ", targets[0])
+    # 划分开集类
+    indices = [i for i, target in enumerate(targets) if target < ood_classes]
+    data = [data[i] for i in indices]
+    targets = [targets[i] for i in indices]
+    
+    # print("data: ", data[500])
+    # print("targets: ", targets[500])
+    # print("data shape: ", len(data))
 
     crop_size = args.img_size
     crop_ratio = args.crop_ratio
@@ -99,6 +109,7 @@ def get_tiny_imagenet(args, alg, name, num_labels, num_classes, data_dir='./data
     
     val_set = TinyImageNetValidation(val_path, label_to_index, transform=transform_val)
 
+
     if is_all_ulb:
         ulb_dset = BasicDataset(alg, data, None, num_classes, transform_weak, True, transform_medium, transform_strong, False, data_type='pil')
         return None, ulb_dset, None
@@ -111,37 +122,8 @@ def get_tiny_imagenet(args, alg, name, num_labels, num_classes, data_dir='./data
                                                                 ulb_imbalance_ratio=args.ulb_imb_ratio,
                                                                 include_lb_to_ulb=include_lb_to_ulb)
 
-    # lb_count = [0 for _ in range(num_classes)]
-    # ulb_count = [0 for _ in range(num_classes)]
-    # for c in lb_targets:
-    #     lb_count[c] += 1
-    # for c in ulb_targets:
-    #     ulb_count[c] += 1
-    # print("lb count: {}".format(lb_count))
-    # print("ulb count: {}".format(ulb_count))
-
-    if alg == 'fullysupervised':
-        lb_data = data
-        lb_targets = targets
-    
-    
-    
-    
     lb_dset = BasicDataset(alg, lb_data, lb_targets, num_classes, transform_weak, False, transform_strong, transform_strong, False, data_type='pil')
     ulb_dset = BasicDataset(alg, ulb_data, ulb_targets, num_classes, transform_weak, True, transform_medium, transform_strong, False, data_type='pil')
     
-    # val_loader = torch.utils.data.DataLoader(val_set, batch_size=args.batch_size, shuffle=False)
-    # eval_data = []
-    # eval_targets = []
-    # for images, labels, _ in val_loader:
-    #     eval_data.extend(images)
-    #     eval_targets.extend(labels)
-    #输出第一个batch
-    # print("lb_data[0]: ", lb_dset.data[0])
-    # print("lb_targets[0]: ", lb_dset.targets[0])
-    # print("ulb_data[0]: ", ulb_dset.data[0])
-    # print("eval_data[0]: ", eval_data[0])
-    # print("eval_targets[0]: ", eval_targets[0])
-    # eval_dset = BasicDataset(alg, eval_data, eval_targets, num_classes, transform_val, False, None, None, False)
-
+ 
     return lb_dset, ulb_dset, val_set

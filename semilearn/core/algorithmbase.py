@@ -43,7 +43,7 @@ class AlgorithmBase:
         
         # common arguments
         self.args = args
-        self.num_classes = args.num_classes
+        self.num_classes = args.ID_classes
         self.ema_m = args.ema_m
         self.epochs = args.epoch
         self.num_train_iter = args.num_train_iter
@@ -58,6 +58,7 @@ class AlgorithmBase:
         self.save_dir = args.save_dir
         self.resume = args.resume
         self.algorithm = args.algorithm
+        self.lr_decay_epochs = args.lr_decay_epochs if hasattr(args, 'lr_decay_epochs') else None
 
         # commaon utils arguments
         self.tb_log = tb_log
@@ -85,6 +86,8 @@ class AlgorithmBase:
 
         # build data loader
         self.loader_dict = self.set_data_loader()
+
+        print("eval loader:",len(self.dataset_dict['eval']))
 
         # cv, nlp, speech builder different arguments
         self.model = self.set_model()
@@ -121,7 +124,7 @@ class AlgorithmBase:
         """
         if self.rank != 0 and self.distributed:
             torch.distributed.barrier()
-        dataset_dict = get_dataset(self.args, self.algorithm, self.args.dataset, self.args.num_labels, self.args.num_classes, self.args.data_dir, self.args.include_lb_to_ulb)
+        dataset_dict = get_dataset(self.args, self.algorithm)
         if dataset_dict is None:
             return dataset_dict
 
@@ -186,6 +189,7 @@ class AlgorithmBase:
         optimizer = get_optimizer(self.model, self.args.optim, self.args.lr, self.args.momentum, self.args.weight_decay, self.args.layer_decay)
         if self.lr_decay_epochs is not None:
             self.lr_decay_epochs = [int(x) for x in self.lr_decay_epochs.split(',')]
+            print(self.lr_decay_epochs)
             scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=self.lr_decay_epochs, gamma=0.1)
         else:
             scheduler = get_cosine_schedule_with_warmup(optimizer,

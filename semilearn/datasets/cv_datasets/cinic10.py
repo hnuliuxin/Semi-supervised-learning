@@ -1,9 +1,8 @@
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT License.
-
+import torch
+import torchvision
+import torchvision.transforms as transforms
 import os
 import json
-import torchvision
 import numpy as np
 import math
 from torch.utils.data import ConcatDataset
@@ -13,27 +12,20 @@ from semilearn.datasets.augmentation import RandAugment, RandomResizedCropAndInt
 from semilearn.datasets.utils import split_ssl_data
 
 
-mean, std = {}, {}
-mean['cifar10'] = [0.485, 0.456, 0.406]
-mean['cifar100'] = [x / 255 for x in [129.3, 124.1, 112.4]]
+cinic_mean = [0.47889522, 0.47227842, 0.43047404]
+cinic_std = [0.24205776, 0.23828046, 0.25874835]
 
-std['cifar10'] = [0.229, 0.224, 0.225]
-std['cifar100'] = [x / 255 for x in [68.2, 65.4, 70.4]]
-
-
-def get_cifar(args, alg, name, num_classes=100, data_dir='./data', include_lb_to_ulb=True):
+def get_cinic10(args, alg, name, num_classes=10, data_dir='./data', include_lb_to_ulb=True, is_all_ulb=False):
     id_classes = args.ID_classes
     id_labels_per_class = args.ID_labels_per_class
+    ood_classes = args.OOD_classes
+    ood_labels_per_class = args.OOD_labels_per_class
     num_labels = id_labels_per_class * num_classes
 
-    data_dir = os.path.join(data_dir, name.lower())
-    dset = getattr(torchvision.datasets, name.upper())
-    dset = dset(data_dir, train=True, download=True)
-    data, targets = dset.data, dset.targets
     crop_size = args.img_size
     crop_ratio = args.crop_ratio
-
     
+    data_dir = os.path.join(data_dir, name.lower())
 
     transform_weak = transforms.Compose([
         transforms.Resize(crop_size),
@@ -64,20 +56,21 @@ def get_cifar(args, alg, name, num_classes=100, data_dir='./data', include_lb_to
         transforms.Normalize(mean[name], std[name],)
     ])
 
+    train_set = torchvision.datasets.ImageFolder(data_dir + '/train')
 
-    dset = getattr(torchvision.datasets, name.upper())
-    dset = dset(data_dir, train=False, download=True)
-    test_data, test_targets = dset.data, dset.targets
-    # 切割验证集类别
-    indices = [i for i in range(len(test_targets)) if test_targets[i] < id_classes] 
-    test_data = [test_data[i] for i in indices]
-    test_targets = [test_targets[i] for i in indices]
+    eval_set = torchvision.datasets.ImageFolder(cinic_directory + '/valid')
 
-    eval_dset = BasicDataset(alg, test_data, test_targets, num_classes, transform_val, False, None, None, False)
+    data, targets = eval_set.samples, eval_set.targets
+    # 划分开集类 验证集
+    indices = [i for i, target in enumerate(targets) if target < id_classes]
+    data = [data[i] for i in indices]
+    targets = [targets[i] for i in indices]
 
-    # print("eval_dset前五个标签：", eval_dset.targets[:5])
-    
-    
+    print("data shape: ", len(data))
+
+    eval_dset = BasicDataset(alg, data, targets, num_classes, transform_val, False, None, None, False)
+
+
     lb_data, lb_targets, ulb_data, ulb_targets = split_ssl_data(args, data, targets, num_classes, 
                                                                 lb_num_labels=num_labels,
                                                                 ulb_num_labels=args.ulb_num_labels,
@@ -85,6 +78,7 @@ def get_cifar(args, alg, name, num_classes=100, data_dir='./data', include_lb_to
                                                                 ulb_imbalance_ratio=args.ulb_imb_ratio,
                                                                 include_lb_to_ulb=include_lb_to_ulb)
     
+
     #切割训练集类别
     indices = [i for i in range(len(lb_targets)) if lb_targets[i] < id_classes]
     lb_data = [lb_data[i] for i in indices]
@@ -99,3 +93,4 @@ def get_cifar(args, alg, name, num_classes=100, data_dir='./data', include_lb_to
 
     # print("shape", len(lb_targets), len(ulb_targets), len(eval_dset.targets))
     return lb_dset, ulb_dset, eval_dset
+
