@@ -1,16 +1,24 @@
 import torch
 import torchvision
-import torchvision.transforms as transforms
 import os
 import json
 import numpy as np
 import math
+from PIL import Image
 from torch.utils.data import ConcatDataset
-from torchvision import transforms
+from torchvision import transforms, datasets
 from .datasetbase import BasicDataset
 from semilearn.datasets.augmentation import RandAugment, RandomResizedCropAndInterpolation
 from semilearn.datasets.utils import split_ssl_data
 
+class ImageFolderInstance(datasets.ImageFolder):
+    def __getitem__(self, index):
+        path, target = self.imgs[index]
+        img = Image.open(path).convert('RGB')
+        # 返回三通道图片的(32,32,3)数组
+        img = transforms.ToTensor()(img)
+        img = self.loader(path)
+        return img, target, index
 
 cinic_mean = [0.47889522, 0.47227842, 0.43047404]
 cinic_std = [0.24205776, 0.23828046, 0.25874835]
@@ -53,12 +61,12 @@ def get_cinic10(args, alg, name, num_classes=10, data_dir='./data', include_lb_t
     transform_val = transforms.Compose([
         transforms.Resize(crop_size),
         transforms.ToTensor(),
-        transforms.Normalize(cinic_mean, cinic_std,)
+        transforms.Normalize(cinic_mean, cinic_std)
     ])
 
-    train_set = torchvision.datasets.ImageFolder(data_dir + '/train')  
+    train_set = ImageFolderInstance(data_dir + '/train')  
 
-    eval_set = torchvision.datasets.ImageFolder(data_dir + '/valid')
+    eval_set = ImageFolderInstance(data_dir + '/valid')
 
     data, targets = eval_set.samples, eval_set.targets
     # 划分开集类 验证集
@@ -68,7 +76,11 @@ def get_cinic10(args, alg, name, num_classes=10, data_dir='./data', include_lb_t
 
     # print("data shape: ", len(data))
 
-    eval_dset = BasicDataset(alg, data, targets, num_classes, transform_val, False, None, None, False)
+    eval_dset = BasicDataset(alg, data, targets, num_classes, transform_val, False, None, None, False, data_type='pil')
+
+    data = train_set.samples
+    targets = train_set.targets
+
 
     if num_labels != 90000:
         lb_data, lb_targets, ulb_data, ulb_targets = split_ssl_data(args, data, targets, num_classes, 
@@ -87,12 +99,12 @@ def get_cinic10(args, alg, name, num_classes=10, data_dir='./data', include_lb_t
     lb_data = [lb_data[i] for i in indices]
     lb_targets = [lb_targets[i] for i in indices]
 
-    lb_dset = BasicDataset(alg, lb_data, lb_targets, num_classes, transform_weak, False, transform_strong, transform_strong, False)
+    lb_dset = BasicDataset(alg, lb_data, lb_targets, num_classes, transform_weak, False, transform_strong, transform_strong, False, data_type='pil')
 
     # print("shape", len(lb_targets), len(ulb_targets))
     # print("lb_dset shape", len(lb_dset.targets))
 
-    ulb_dset = BasicDataset(alg, ulb_data, ulb_targets, num_classes, transform_weak, True, transform_medium, transform_strong, False)
+    ulb_dset = BasicDataset(alg, ulb_data, ulb_targets, num_classes, transform_weak, True, transform_medium, transform_strong, False, data_type='pil')
 
     # print("shape", len(lb_targets), len(ulb_targets), len(eval_dset.targets))
     return lb_dset, ulb_dset, eval_dset
