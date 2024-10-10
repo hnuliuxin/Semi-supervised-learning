@@ -70,7 +70,7 @@ def get_dataset(args, algorithm, data_dir='./data', include_lb_to_ulb=True):
 
     dataset = args.dataset
     num_classes = args.num_classes
-    from semilearn.datasets import get_cifar, get_tiny_imagenet
+    from semilearn.datasets import get_cifar, get_tiny_imagenet, get_cinic10
 
     # 在此处添加新的数据集
     if dataset == "cifar100_with_tin":

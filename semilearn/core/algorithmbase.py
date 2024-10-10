@@ -87,8 +87,6 @@ class AlgorithmBase:
         # build data loader
         self.loader_dict = self.set_data_loader()
 
-        print("eval loader:",len(self.dataset_dict['eval']))
-
         # cv, nlp, speech builder different arguments
         self.model = self.set_model()
         if teacher_net_builder is not None:

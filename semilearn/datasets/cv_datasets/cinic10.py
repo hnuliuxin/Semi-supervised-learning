@@ -32,7 +32,7 @@ def get_cinic10(args, alg, name, num_classes=10, data_dir='./data', include_lb_t
         transforms.RandomCrop(crop_size, padding=int(crop_size * (1 - crop_ratio)), padding_mode='reflect'),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
-        transforms.Normalize(mean[name], std[name])
+        transforms.Normalize(cinic_mean, cinic_std)
     ])
     transform_medium = transforms.Compose([
         transforms.Resize(crop_size),
@@ -40,7 +40,7 @@ def get_cinic10(args, alg, name, num_classes=10, data_dir='./data', include_lb_t
         transforms.RandomHorizontalFlip(),
         RandAugment(1, 5),
         transforms.ToTensor(),
-        transforms.Normalize(mean[name], std[name])
+        transforms.Normalize(cinic_mean, cinic_std)
     ])
     transform_strong = transforms.Compose([
         transforms.Resize(crop_size),
@@ -48,17 +48,17 @@ def get_cinic10(args, alg, name, num_classes=10, data_dir='./data', include_lb_t
         transforms.RandomHorizontalFlip(),
         RandAugment(3, 5),
         transforms.ToTensor(),
-        transforms.Normalize(mean[name], std[name])
+        transforms.Normalize(cinic_mean, cinic_std)
     ])
     transform_val = transforms.Compose([
         transforms.Resize(crop_size),
         transforms.ToTensor(),
-        transforms.Normalize(mean[name], std[name],)
+        transforms.Normalize(cinic_mean, cinic_std,)
     ])
 
-    train_set = torchvision.datasets.ImageFolder(data_dir + '/train')
+    train_set = torchvision.datasets.ImageFolder(data_dir + '/train')  
 
-    eval_set = torchvision.datasets.ImageFolder(cinic_directory + '/valid')
+    eval_set = torchvision.datasets.ImageFolder(data_dir + '/valid')
 
     data, targets = eval_set.samples, eval_set.targets
     # 划分开集类 验证集
@@ -66,18 +66,21 @@ def get_cinic10(args, alg, name, num_classes=10, data_dir='./data', include_lb_t
     data = [data[i] for i in indices]
     targets = [targets[i] for i in indices]
 
-    print("data shape: ", len(data))
+    # print("data shape: ", len(data))
 
     eval_dset = BasicDataset(alg, data, targets, num_classes, transform_val, False, None, None, False)
 
-
-    lb_data, lb_targets, ulb_data, ulb_targets = split_ssl_data(args, data, targets, num_classes, 
+    if num_labels != 90000:
+        lb_data, lb_targets, ulb_data, ulb_targets = split_ssl_data(args, data, targets, num_classes, 
                                                                 lb_num_labels=num_labels,
                                                                 ulb_num_labels=args.ulb_num_labels,
                                                                 lb_imbalance_ratio=args.lb_imb_ratio,
                                                                 ulb_imbalance_ratio=args.ulb_imb_ratio,
                                                                 include_lb_to_ulb=include_lb_to_ulb)
-    
+    else:
+        lb_data, lb_targets = data, targets
+        if include_lb_to_ulb:
+            ulb_data, ulb_targets = data, targets
 
     #切割训练集类别
     indices = [i for i in range(len(lb_targets)) if lb_targets[i] < id_classes]

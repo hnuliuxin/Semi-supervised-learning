@@ -77,14 +77,17 @@ def get_cifar(args, alg, name, num_classes=100, data_dir='./data', include_lb_to
 
     # print("eval_dset前五个标签：", eval_dset.targets[:5])
     
-    
-    lb_data, lb_targets, ulb_data, ulb_targets = split_ssl_data(args, data, targets, num_classes, 
+    if num_labels != 50000:
+        lb_data, lb_targets, ulb_data, ulb_targets = split_ssl_data(args, data, targets, num_classes, 
                                                                 lb_num_labels=num_labels,
                                                                 ulb_num_labels=args.ulb_num_labels,
                                                                 lb_imbalance_ratio=args.lb_imb_ratio,
                                                                 ulb_imbalance_ratio=args.ulb_imb_ratio,
                                                                 include_lb_to_ulb=include_lb_to_ulb)
-    
+    else:
+        lb_data, lb_targets= data, targets
+        if include_lb_to_ulb:
+            ulb_data, ulb_targets = data, targets
     #切割训练集类别
     indices = [i for i in range(len(lb_targets)) if lb_targets[i] < id_classes]
     lb_data = [lb_data[i] for i in indices]

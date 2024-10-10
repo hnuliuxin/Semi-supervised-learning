@@ -247,13 +247,14 @@ if __name__ == "__main__":
     if not os.path.exists("./config/ossl_cv/"):
         os.makedirs("./config/ossl_cv/", exist_ok=True)
     ID_labels_per_class = {"s": [1800, 100], "m": [3600,200], "l":[5400,300], "sl":[7200,400], "full":[9000, 500]}
-    ID_classes = {"s": [3, 30], "m": [5, 50], "l":[7, 70]}
+    ID_classes = {"s": [3, 30], "m": [5, 50], "l":[7, 70], "full":[10, 100]}
     OOD_classes = {"s": [100], "m": [150], "l":[200]}
 
     for i in ID_labels_per_class:
         for j in ID_classes:
-            exp_ossl_cv(ID_labels_per_class=ID_labels_per_class[i],
-                ID_classes=ID_classes[j],
-                OOD_classes=OOD_classes[j])
+            for k in OOD_classes:
+                exp_ossl_cv(ID_labels_per_class=ID_labels_per_class[i],
+                    ID_classes=ID_classes[j],
+                    OOD_classes=OOD_classes[k])
 
 

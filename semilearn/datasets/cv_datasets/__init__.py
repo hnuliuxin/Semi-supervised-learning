@@ -11,3 +11,4 @@ from .svhn import get_svhn
 from .food101 import get_food101
 from .tiny_imagenet import get_tiny_imagenet
 from .places365 import get_places365
+from .cinic10 import get_cinic10
