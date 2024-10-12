@@ -1,14 +1,18 @@
 import os
 
 def create_configuration(cfg, cfg_file):
-    cfg["save_name"] = "{alg}_{dataset}_{num_lb}_{net1}_{net}_{seed}".format(
+    cfg["save_name"] = "{alg}_{dataset}_{net_teacher}_{net}_{ID_class}_{ID_labels_per_class}_{OOD_class}_{OOD_labels_per_class}_{seed}".format(
         alg=cfg["algorithm"],
         dataset=cfg["dataset"],
-        num_lb=cfg["num_labels"],
-        net1=cfg["net_teacher"],
+        net_teacher=cfg["net_teacher"],
         net=cfg["net"],
-        seed=cfg["seed"],
+        ID_class=cfg["ID_classes"],
+        ID_labels_per_class=cfg["ID_labels_per_class"],
+        OOD_class=cfg["OOD_classes"],
+        OOD_labels_per_class=cfg["OOD_labels_per_class"],
+        seed=cfg["seed"]
     )
+    # print(cfg["save_name"])
     # resume
     cfg["resume"] = True
     cfg["load_path"] = "{}/{}/latest_model.pth".format(
@@ -29,27 +33,32 @@ def create_configuration(cfg, cfg_file):
             w.writelines(line)
             w.write("\n")
 
-def create_ossl_cv_config(
+            
+def create_oskd_cv_config(
     alg,
     seed,
     dataset,
+    num_ulb,
     net,
-    num_classes,
-    num_labels,
+    ID_classes,
+    ID_labels_per_class,
+    OOD_classes,
+    OOD_labels_per_class,
     img_size,
     crop_ratio,
     port,
     lr,
+    lr_decay_epochs,
     weight_decay,
-    layer_decay,
+    layer_decay=1,
     warmup=5,
-    amp=False,
+    amp=False
 ):
     cfg = {}
     cfg["algorithm"] = alg
 
     # save config
-    cfg["save_dir"] = "./saved_models/OSKD_cv/"
+    cfg["save_dir"] = "./saved_models/oskd_cv/"
     cfg["save_name"] = None
     cfg["resume"] = False
     cfg["load_path"] = None
@@ -58,23 +67,25 @@ def create_ossl_cv_config(
     cfg["use_wandb"] = False
     cfg["use_aim"] = False
 
-    if dataset == "imagenet":
-        cfg["epoch"] = 500
-        cfg["num_train_iter"] = 1024 * 500
-        cfg["num_log_iter"] = 256
-        cfg["num_eval_iter"] = 5120
-        cfg["batch_size"] = 256
-        cfg["eval_batch_size"] = 512
-    else:
-        cfg["epoch"] = 200
-        cfg["num_train_iter"] = 1024 * 200
-        cfg["num_log_iter"] = 256
-        cfg["num_eval_iter"] = 2048
-        cfg["batch_size"] = 8
-        cfg["eval_batch_size"] = 16
+    cfg["epoch"] = 200
+    cfg["num_ulb"] = num_ulb
 
-    cfg["num_warmup_iter"] = int(1024 * warmup)
-    cfg["num_labels"] = num_labels
+    cfg["batch_size"] = 64
+    cfg["eval_batch_size"] = 128
+
+    cfg["iter_per_epoch"] = cfg["num_ulb"] // (cfg["batch_size"] * 2)
+    cfg["num_train_iter"] = cfg["epoch"] * cfg["iter_per_epoch"]
+    cfg["num_log_iter"] = cfg["iter_per_epoch"] // 2
+    cfg["num_eval_iter"] = cfg["iter_per_epoch"] 
+    
+
+    cfg["num_warmup_iter"] = int(cfg["iter_per_epoch"] * warmup)
+    
+    cfg["ID_classes"] = ID_classes
+    cfg["ID_labels_per_class"] = ID_labels_per_class
+    cfg["OOD_classes"] = OOD_classes
+    cfg["OOD_labels_per_class"] = OOD_labels_per_class
+
 
     cfg["uratio"] = 1
     cfg["ema_m"] = 0.0
@@ -97,9 +108,10 @@ def create_ossl_cv_config(
     cfg["crop_ratio"] = crop_ratio
 
     # optim config
-    cfg["optim"] = "AdamW"
+    cfg["optim"] = "SGD"
     cfg["lr"] = lr
     cfg["layer_decay"] = layer_decay
+    cfg["lr_decay_epochs"] = lr_decay_epochs
     cfg["momentum"] = 0.9
     cfg["weight_decay"] = weight_decay
     cfg["amp"] = amp
@@ -108,13 +120,18 @@ def create_ossl_cv_config(
 
     # net config
     cfg["net_teacher"] = net[0]
-    path = os.path.join("./saved_models/OSSL_cv/")
-    path = os.path.join(path, "supervised_{dataset}_{num_lb}_{net}_0".format(
+    path = os.path.join("./saved_models/ossl_cv/")
+    path = os.path.join(path, "supervised_{dataset}_{net}_{ID_class}_{ID_labels_per_class}_{OOD_class}_{OOD_labels_per_class}_{seed}".format(
         dataset=dataset,
-        num_lb=num_labels,
-        net=net[0],
-
+        net=cfg["net_teacher"],
+        ID_class=cfg["ID_classes"],
+        ID_labels_per_class=cfg["ID_labels_per_class"],
+        OOD_class=cfg["OOD_classes"],
+        OOD_labels_per_class=cfg["OOD_labels_per_class"],
+        seed=seed
     ))
+
+
     cfg["net_teacher_path"] = os.path.join(path, "model_best.pth")
     cfg["net"] = net[1]
     cfg["net_from_name"] = False
@@ -123,8 +140,7 @@ def create_ossl_cv_config(
     cfg["data_dir"] = "./data"
     cfg["dataset"] = dataset
     cfg["train_sampler"] = "RandomSampler"
-    cfg["num_classes"] = num_classes
-    cfg["num_workers"] = 4
+    cfg["num_workers"] = 8
 
     # basic config
     cfg["seed"] = seed
@@ -143,9 +159,9 @@ def create_ossl_cv_config(
 
     return cfg
 
-def exp_OSKD_cv(label_amount):
-    config_file = r"./config/OSKD_cv/"
-    save_path = r"./saved_models/OSKD_cv"
+def exp_oskd_cv(ID_labels_per_class, ID_classes, OOD_classes):
+    config_file = r"./config/oskd_cv/"
+    save_path = r"./saved_models/oskd_cv"
 
     if not os.path.exists(config_file):
         os.mkdir(config_file)
@@ -154,34 +170,30 @@ def exp_OSKD_cv(label_amount):
     
     algs = [
         "kd",
-        "dkd",
-        "crd",
-        "srd",
-        "fitnet",
-        "dtkd",
-        "pad"
+        # "dkd",
+        # "crd",
+        # "srd",
+        # "fitnet",
+        # "dtkd",
+        # "pad"
     ]
 
     nets = [
         ["resnet32x4", "resnet8x4"],
-        ["resnet32x4", "shuffleV1"],
-        ["wrn_40_2", "wrn_40_1"],
-        ["wrn_40_4", "wrn_16_2"],
-        ["wrn_40_4", "wrn_16_4"],
-        ["resnet34", "resnet10"],
-        ["resnet50", "resnet18"],
-        ["resnet34", "wrn_16_2"],
-        ["vgg13", "vgg8"],
-        ["wrn_40_1", "wrn_16_1"]
+        # ["resnet32x4", "shuffleV1"],
+        # ["wrn_40_2", "wrn_40_1"],
+        # ["wrn_40_4", "wrn_16_2"],
+        # ["wrn_40_4", "wrn_16_4"],
+        # ["resnet34", "resnet10"],
+        # ["resnet50", "resnet18"],
+        # ["resnet34", "wrn_16_2"],
+        # ["vgg13", "vgg8"],
+        # ["wrn_40_1", "wrn_16_1"]
     ]
 
     datasets = [
-        "cifar100_with_tiny_imagenet",
-        "cifar100_with_places365", 
-        "cifar100", 
-        "tiny_imagenet", 
-        "cifar100_and_tiny_imagenet", 
-        "cifar100_and_places365"
+        "cifar100_with_tin",
+        "cinic10"
     ]
     seeds = [0, 1, 2]
 
@@ -189,48 +201,50 @@ def exp_OSKD_cv(label_amount):
     count = 0
 
     weight_decay = 5e-4
-    # lr = 5e-5
+    lr = 5e-2
+    lr_decay_epochs = "100,150,180"
+    layer_decay = 1.0
     warmup = 0
     amp = False
+    img_size = 32
 
     for alg in algs:
         for dataset in datasets:
             for net in nets:
                 for seed in seeds:
                     # changes for each dataset
-                    if dataset == "tiny_imagenet":
-                        num_classes = 200
-                        num_labels = label_amount[1] * num_classes
-                        img_size = 32
+                    if dataset == "cinic10":
+                        id_classes = ID_classes[0]
+                        id_labels_per_class = ID_labels_per_class[0]
+                        ood_classes = 10 - id_classes
+                        ood_labels_per_class = 9000
+                        num_ulb = 90000
                         crop_ratio = 0.875
-
-                        lr = 5e-4
-                        layer_decay = 0.5
                     else:
-                        num_classes = 100
-                        num_labels = label_amount[0] * num_classes
-                        img_size = 32
+                        id_classes = ID_classes[1]
+                        id_labels_per_class = ID_labels_per_class[1]
+                        ood_classes = OOD_classes[0]
+                        ood_labels_per_class = 500
+                        num_ulb = 50000 + ood_classes * ood_labels_per_class
                         crop_ratio = 0.875
-
-                        lr = 5e-4
-                        layer_decay = 0.5
-
-                    if alg == "dtkd":
-                        lr = 5e-3
                         
                     
                     port = dist_port[count]
-                    cfg = create_ossl_cv_config(
+                    cfg = create_oskd_cv_config(
                         alg,
                         seed,
                         dataset,
+                        num_ulb,
                         net,
-                        num_classes,
-                        num_labels,
+                        id_classes,
+                        id_labels_per_class,
+                        ood_classes,
+                        ood_labels_per_class,   
                         img_size,
                         crop_ratio,
                         port,
                         lr,
+                        lr_decay_epochs,
                         weight_decay,
                         layer_decay,
                         warmup,
@@ -240,12 +254,21 @@ def exp_OSKD_cv(label_amount):
                     create_configuration(cfg, config_file)
 
 if __name__ == "__main__":
-    if not os.path.exists("./saved_models/OSKD_cv/"):
-        os.makedirs("./saved_models/OSKD_cv/", exist_ok=True)
-    if not os.path.exists("./config/OSKD_cv/"):
-        os.makedirs("./config/OSKD_cv/", exist_ok=True)
-    label_amount = {"s": [2, 2], "m": [25, 25], "l":[100,100], "full":[500, 500]}
-    for i in label_amount:
-        exp_OSKD_cv(label_amount=label_amount[i])
+    if not os.path.exists("./saved_models/oskd_cv/"):
+        os.makedirs("./saved_models/oskd_cv/", exist_ok=True)
+    if not os.path.exists("./config/oskd_cv/"):
+        os.makedirs("./config/oskd_cv/", exist_ok=True)
+
+
+    ID_labels_per_class = {"s": [1800, 100], "m": [3600,200], "l":[5400,300], "sl":[7200,400], "full":[9000, 500]}
+    ID_classes = {"s": [3, 30], "m": [5, 50], "l":[7, 70], "full":[10, 100]}
+    OOD_classes = {"s": [100], "m": [150], "l":[200]}
+
+    for i in ID_labels_per_class:
+        for j in ID_classes:
+            for k in OOD_classes:
+                exp_oskd_cv(ID_labels_per_class=ID_labels_per_class[i],
+                    ID_classes=ID_classes[j],
+                    OOD_classes=OOD_classes[k])
 
 
