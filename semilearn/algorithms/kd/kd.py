@@ -70,16 +70,18 @@ class KD(AlgorithmBase):
                 feat_dict['x_unlb'] = outs_x_unlb['feat'][-1]
 
             sup_loss = self.ce_loss(logits_x_lb, y_lb, reduction='mean')
-            kd_loss = KD_Loss(logits_x_lb, logits_x_lb_teacher, self.T)
+
+            # 删除
+            # kd_loss = KD_Loss(logits_x_lb, logits_x_lb_teacher, self.T)
             if x_ulb_w is not None:
                 unsup_kd_loss = KD_Loss(logits_x_unlb, logits_x_unlb_teacher, self.T)
             else:
                 unsup_kd_loss = 0
-            total_loss = sup_loss * self.gamma + kd_loss * self.alpha + unsup_kd_loss * self.lambda_u
+            total_loss = sup_loss * self.gamma +  unsup_kd_loss * self.lambda_u
 
         out_dict = self.process_out_dict(loss=total_loss, feat=feat_dict)
         log_dict = self.process_log_dict(sup_loss=sup_loss.item(), 
-                                         kd_loss=kd_loss.item(), 
+                                        #  kd_loss=kd_loss.item(), 
                                          unsup_kd_loss=unsup_kd_loss.item() if x_ulb_w is not None else 0,)
         return out_dict, log_dict
 

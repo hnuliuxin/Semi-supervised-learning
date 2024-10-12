@@ -88,7 +88,7 @@ class FitNet(AlgorithmBase):
             # print(feats_x.shape, feats_x_teacher.shape)
 
             sup_loss = self.ce_loss(logits_x[:batch_size], y_lb, reduction='mean')
-            kd_loss = self.consistency_loss(feats_x, feats_x_teacher, 'mse')
+            kd_loss = self.consistency_loss(feats_x[batch_size:], feats_x_teacher[batch_size:], 'mse')
 
             total_loss = self.gamma * sup_loss + self.alpha * kd_loss
         
