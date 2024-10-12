@@ -185,6 +185,8 @@ class AlgorithmBase:
         """
         self.print_fn("Create optimizer and scheduler")
         optimizer = get_optimizer(self.model, self.args.optim, self.args.lr, self.args.momentum, self.args.weight_decay, self.args.layer_decay)
+        # 调试
+        self.lr_decay_epochs = None
         if self.lr_decay_epochs is not None:
             self.lr_decay_epochs = [int(x) for x in self.lr_decay_epochs.split(',')]
             print(self.lr_decay_epochs)
@@ -362,6 +364,7 @@ class AlgorithmBase:
                     self.it += 1
                 
                 self.call_hook("after_train_epoch")
+                self.scheduler.step()
 
         self.call_hook("after_run")
 
@@ -549,6 +552,16 @@ class AlgorithmBase:
         """
         return hook_name in self.hooks_dict
 
+    def get_FLOPs(self):
+        """
+        Get FLOPs of the model
+        """
+        from thop import profile
+        input = torch.randn(128, 3, self.args.img_size, self.args.img_size).cuda()
+        flops, params = profile(self.model, inputs=(input, ))
+        total_flops = flops * self.args.iter_per_epoch * self.args.epoch
+        total_flops_with_bp = total_flops * 2
+        return total_flops, total_flops_with_bp
 
     @staticmethod
     def get_argument():
