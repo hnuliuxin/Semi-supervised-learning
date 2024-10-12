@@ -81,9 +81,8 @@ def create_ossl_cv_config(
     
     cfg["ID_classes"] = ID_classes
     cfg["ID_labels_per_class"] = ID_labels_per_class
-    if OOD_classes is not None:
-        cfg["OOD_classes"] = OOD_classes
-        cfg["OOD_labels_per_class"] = OOD_labels_per_class
+    cfg["OOD_classes"] = OOD_classes
+    cfg["OOD_labels_per_class"] = OOD_labels_per_class
 
     cfg["uratio"] = 1
     cfg["ema_m"] = 0.0
