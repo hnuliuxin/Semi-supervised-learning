@@ -14,8 +14,8 @@ class Hook:
     def after_train_epoch(self, algorithm):
         # if isinstance(algorithm.scheduler, torch.optim.lr_scheduler.MultiStepLR):
         #     algorithm.scheduler.step()
-        algorithm.ep += 1
-        # pass
+        # algorithm.ep += 1
+        pass
 
     def before_train_step(self, algorithm):
         pass
