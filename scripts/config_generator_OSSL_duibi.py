@@ -36,6 +36,7 @@ def create_ossl_cv_config(
     alg,
     seed,
     dataset,
+    num_ulb,
     net,
     ID_classes,
     ID_labels_per_class,
@@ -65,13 +66,18 @@ def create_ossl_cv_config(
     cfg["use_aim"] = False
 
     cfg["epoch"] = 200
-    cfg["num_train_iter"] = 1024 * 200
-    cfg["num_log_iter"] = 256
-    cfg["num_eval_iter"] = 2048
-    cfg["batch_size"] = 8
-    cfg["eval_batch_size"] = 16
+    cfg["num_ulb"] = num_ulb
 
-    cfg["num_warmup_iter"] = int(1024 * warmup)
+    cfg["batch_size"] = 64
+    cfg["eval_batch_size"] = 128
+
+    cfg["iter_per_epoch"] = cfg["num_ulb"] // (cfg["batch_size"] * 2)
+    cfg["num_train_iter"] = cfg["epoch"] * cfg["iter_per_epoch"]
+    cfg["num_log_iter"] = cfg["iter_per_epoch"] // 2
+    cfg["num_eval_iter"] = cfg["iter_per_epoch"] 
+    
+
+    cfg["num_warmup_iter"] = int(cfg["iter_per_epoch"] * warmup)
     
     cfg["ID_classes"] = ID_classes
     cfg["ID_labels_per_class"] = ID_labels_per_class
@@ -135,7 +141,7 @@ def create_ossl_cv_config(
     cfg["data_dir"] = "./data"
     cfg["dataset"] = dataset
     cfg["train_sampler"] = "RandomSampler"
-    cfg["num_workers"] = 4
+    cfg["num_workers"] = 8
 
     # basic config
     cfg["seed"] = seed
@@ -164,23 +170,23 @@ def exp_ossl_cv(ID_labels_per_class, ID_classes, OOD_classes):
         os.mkdir(save_path)
     
     algs = [
-        # "fixmatch",
-        # "pseudolabel",
-        # "meanteacher",
-        # "dash",
+        "fixmatch",
+        "pseudolabel",
+        "meanteacher",
+        "dash",
         "supervised",
-        # "iomatch",
+        "iomatch",
     ]
 
     nets = [
         "resnet8x4",
         "resnet32x4",
-        # "wrn_16_1",
-        # "wrn_40_1",
-        # "shuffleV1",
-        # "vgg8",
-        # "vgg13",
-        # "wrn_40_2"
+        "wrn_16_1",
+        "wrn_40_1",
+        "shuffleV1",
+        "vgg8",
+        "vgg13",
+        "wrn_40_2"
     ]
 
     datasets = [
@@ -210,12 +216,14 @@ def exp_ossl_cv(ID_labels_per_class, ID_classes, OOD_classes):
                         id_labels_per_class = ID_labels_per_class[0]
                         ood_classes = 10 - id_classes
                         ood_labels_per_class = 9000
+                        num_ulb = 90000
                         crop_ratio = 0.875
                     else:
                         id_classes = ID_classes[1]
                         id_labels_per_class = ID_labels_per_class[1]
                         ood_classes = OOD_classes[0]
                         ood_labels_per_class = 500
+                        num_ulb = 50000 + ood_classes * ood_labels_per_class
                         crop_ratio = 0.875
 
                     port = dist_port[count]
@@ -223,6 +231,7 @@ def exp_ossl_cv(ID_labels_per_class, ID_classes, OOD_classes):
                         alg,
                         seed,
                         dataset,
+                        num_ulb,
                         net,
                         id_classes,
                         id_labels_per_class,
@@ -246,8 +255,8 @@ if __name__ == "__main__":
         os.makedirs("./saved_models/ossl_cv/", exist_ok=True)
     if not os.path.exists("./config/ossl_cv/"):
         os.makedirs("./config/ossl_cv/", exist_ok=True)
-    ID_labels_per_class = {"m": [3600,200]}
-    ID_classes = {"m": [5, 50]}
+    ID_labels_per_class = {"full": [9000,500]}
+    ID_classes = {"m": [5, 100]}
     OOD_classes = {"full":[200]}
 
     for i in ID_labels_per_class:
