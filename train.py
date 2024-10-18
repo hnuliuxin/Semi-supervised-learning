@@ -69,7 +69,7 @@ def get_config():
     )
     parser.add_argument("--num_log_iter", type=int, default=5, help="logging frequency")
     parser.add_argument("-nl", "--num_labels", type=int, default=400)
-    parser.add_argument("-bsz", "--batch_size", type=int, default=8)
+    parser.add_argument("-bsz", "--batch_size", type=int, default=64)
     parser.add_argument(
         "--uratio",
         type=int,
@@ -79,7 +79,7 @@ def get_config():
     parser.add_argument(
         "--eval_batch_size",
         type=int,
-        default=16,
+        default=128,
         help="batch size of evaluation data loader (it does not affect the accuracy)",
     )
     parser.add_argument(
@@ -365,8 +365,8 @@ def main_worker(gpu, ngpus_per_node, args):
     #增加老师模型的网络加载
     teacher_net_builder = None
     if args.net_teacher is not None:
-        teacher_net_builder = get_net_builder(args.net_teacher, args.net_from_name)
-    _net_builder = get_net_builder(args.net, args.net_from_name)
+        teacher_net_builder = get_net_builder(args, args.net_teacher, args.net_from_name)
+    _net_builder = get_net_builder(args, args.net, args.net_from_name)
     # optimizer, scheduler, datasets, dataloaders with be set in algorithms
     if args.imb_algorithm is not None:
         model = get_imb_algorithm(args, _net_builder, tb_log, logger)
