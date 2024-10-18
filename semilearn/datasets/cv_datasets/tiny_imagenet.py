@@ -21,13 +21,15 @@ class ImageFolderInstance(datasets.ImageFolder):
         return img, target, index
     
 class TinyImageNetValidation(Dataset):
-    def __init__(self, root, label_to_index, transform=None):
+    def __init__(self, root, label_to_index, seen_classes=None, transform=None):
         self.root = root
         self.transform = transform
         self.annotations_file = os.path.join(root,  'val_annotations.txt')
         with open(self.annotations_file, 'r') as f:
             self.annotations = f.readlines()
         self.annotations = [line.strip().split('\t') for line in self.annotations]
+        indices = [i for i, ann in enumerate(self.annotations) if label_to_index[ann[1]] < seen_classes]
+        self.annotations = [self.annotations[i] for i in indices]
 
         # prepare a mapping from class name to index
         self.label_to_index = label_to_index
@@ -48,10 +50,19 @@ mean, std = {}, {}
 mean['tiny_imagenet'] = [0.4802, 0.4481, 0.3975]
 std['tiny_imagenet'] = [0.2770, 0.2691, 0.2821]
 
-def get_tiny_imagenet(args, alg, name, num_classes=200, data_dir='./data', include_lb_to_ulb=True, is_all_ulb=False):
+def get_tiny_imagenet(args, alg, name, num_classes=200, data_dir='./data', include_lb_to_ulb=True, is_all_ulb=False, use_val=True):
+    id_classes = args.ID_classes
+    id_labels_per_class = args.ID_labels_per_class
     ood_classes = args.OOD_classes
     ood_labels_per_class = args.OOD_labels_per_class
-    num_labels = ood_labels_per_class * num_classes
+    if use_val:
+        num_labels = id_labels_per_class * num_classes
+        seen_classes = id_classes
+        seen_labels_per_class = id_labels_per_class
+    else:
+        num_labels = ood_labels_per_class * num_classes
+        seen_classes = ood_classes
+        seen_labels_per_class = ood_labels_per_class
 
     data_dir = os.path.join(data_dir, name.lower())
     train_path = os.path.join(data_dir, 'train')
@@ -64,7 +75,7 @@ def get_tiny_imagenet(args, alg, name, num_classes=200, data_dir='./data', inclu
 
     data, targets = train_set.samples, train_set.targets
     # 划分开集类
-    indices = [i for i, target in enumerate(targets) if target < ood_classes]
+    indices = [i for i, target in enumerate(targets) if target < seen_classes]
     data = [data[i] for i in indices]
     targets = [targets[i] for i in indices]
     
@@ -107,8 +118,8 @@ def get_tiny_imagenet(args, alg, name, num_classes=200, data_dir='./data', inclu
         transforms.Normalize(mean[name], std[name],)
     ])
     
-    val_set = TinyImageNetValidation(val_path, label_to_index, transform=transform_val)
-
+    val_set = TinyImageNetValidation(val_path, label_to_index, seen_classes, transform=transform_val)
+    print(val_set.annotations)
 
     if is_all_ulb:
         ulb_dset = BasicDataset(alg, data, None, num_classes, transform_weak, True, transform_medium, transform_strong, False, data_type='pil')
