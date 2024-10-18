@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader, ConcatDataset
 from semilearn.datasets import get_collactor, name2sampler
 from semilearn.nets.utils import param_groups_layer_decay, param_groups_weight_decay
 
-def get_net_builder(net_name, from_name: bool):
+def get_net_builder(args, net_name, from_name: bool):
     """
     built network according to network name
     return **class** of backbone network (not instance).
@@ -21,17 +21,22 @@ def get_net_builder(net_name, from_name: bool):
         from_name: If True, net_buidler takes models in torch.vision models. Then, net_conf is ignored.
     """
     if from_name:
-        import torchvision.models as nets
-        model_name_list = sorted(name for name in nets.__dict__
-                                 if name.islower() and not name.startswith("__")
-                                 and callable(nets.__dict__[name]))
-
-        if net_name not in model_name_list:
-            assert Exception(f"[!] Networks\' Name is wrong, check net config, \
-                               expected: {model_name_list}  \
-                               received: {net_name}")
+        if args.use_timm:
+            import timm
+            builder = timm.create_model
+            return builder
         else:
-            return nets.__dict__[net_name]
+            import torchvision.models as nets
+            model_name_list = sorted(name for name in nets.__dict__
+                                    if name.islower() and not name.startswith("__")
+                                    and callable(nets.__dict__[name]))
+
+            if net_name not in model_name_list:
+                assert Exception(f"[!] Networks\' Name is wrong, check net config, \
+                                expected: {model_name_list}  \
+                                received: {net_name}")
+            else:
+                return nets.__dict__[net_name]
     else:
         # TODO: fix bug here
         import semilearn.nets as nets
@@ -70,17 +75,26 @@ def get_dataset(args, algorithm, data_dir='./data', include_lb_to_ulb=True):
 
     dataset = args.dataset
     num_classes = args.num_classes
-    from semilearn.datasets import get_cifar, get_tiny_imagenet, get_cinic10
+    from semilearn.datasets import get_cifar, get_tiny_imagenet
 
     # 在此处添加新的数据集
     if dataset == "cifar100_with_tin":
-        lb_dset, ulb_dset1, eval_dset = get_cifar(args, algorithm, "cifar100", data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)
-        _, ulb_dset2, _ = get_tiny_imagenet(args, algorithm, "tiny_imagenet", data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb, is_all_ulb=True)
-        ulb_dset = ConcatDataset([ulb_dset1, ulb_dset2])
+        lb_dset, ulb_dset1, eval_dset = get_cifar(args, algorithm, "cifar100", data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb, use_val=True)
+        _, ulb_dset2, _ = get_tiny_imagenet(args, algorithm, "tiny_imagenet", data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb, is_all_ulb=True, use_val=False)
+        if ulb_dset2 is not None:
+            ulb_dset = ConcatDataset([ulb_dset1, ulb_dset2])
+        else :
+            ulb_dset = ulb_dset1
         test_dset = None
-    elif dataset == "cinic10":
-        lb_dset, ulb_dset, eval_dset= get_cinic10(args, algorithm, "cinic10", data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb)
+    elif dataset == "tiny_imagenet_with_cifar":
+        lb_dset, ulb_dset1, eval_dset = get_tiny_imagenet(args, algorithm, "tiny_imagenet", data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb, use_val=True)
+        _, ulb_dset2, _ = get_cifar(args, algorithm, "cifar100", data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb, use_val=False)
+        if ulb_dset2 is not None:
+            ulb_dset = ConcatDataset([ulb_dset1, ulb_dset2])
+        else :
+            ulb_dset = ConcatDataset([ulb_dset1, ulb_dset2])
         test_dset = None
+        
 
     dataset_dict = {'train_lb': lb_dset, 'train_ulb': ulb_dset, 'eval': eval_dset, 'test': test_dset}
     return dataset_dict
