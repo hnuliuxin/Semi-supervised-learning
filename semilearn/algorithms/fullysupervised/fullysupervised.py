@@ -32,21 +32,22 @@ class FullySupervised(AlgorithmBase):
             sup_loss = self.ce_loss(logits_x_lb, y_lb, reduction='mean')
 
         out_dict = self.process_out_dict(loss=sup_loss)
-        log_dict = self.process_log_dict(sup_loss=sup_loss.item())
+        log_dict = self.process_log_dict(sup_loss=sup_loss.item(),
+                                            epoch=self.epoch)
         return out_dict, log_dict
 
     
     def train(self):
-        self.ep=0
+        # self.ep=0
         # lb: labeled, ulb: unlabeled
         self.model.train()
         self.call_hook("before_run")
             
         for epoch in range(self.start_epoch, self.epochs):
             self.epoch = epoch
-            if self.rank == 0:
-                print("now epoch",self.epoch)
-                print("now ep",self.ep)
+            # if self.rank == 0:
+            #     print("now epoch",self.epoch)
+            #     print("now ep",self.ep)
             
             # prevent the training iterations exceed args.num_train_iter
             if self.it > self.num_train_iter:
