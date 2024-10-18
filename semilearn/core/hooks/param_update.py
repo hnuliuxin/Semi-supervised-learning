@@ -36,8 +36,8 @@ class ParamUpdateHook(Hook):
                 torch.nn.utils.clip_grad_norm_(algorithm.model.parameters(), algorithm.clip_grad)
             algorithm.optimizer.step()
 
-        # if algorithm.scheduler is not None and not isinstance(algorithm.scheduler, torch.optim.lr_scheduler.MultiStepLR):
-        #     algorithm.scheduler.step()
+        if algorithm.scheduler is not None and not isinstance(algorithm.scheduler, torch.optim.lr_scheduler.MultiStepLR):
+            algorithm.scheduler.step()
         algorithm.model.zero_grad()
 
         if hasattr(algorithm, 'end_run'):
