@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+import timm
 import contextlib
 import numpy as np
 from inspect import signature
@@ -186,7 +187,7 @@ class AlgorithmBase:
         self.print_fn("Create optimizer and scheduler")
         optimizer = get_optimizer(self.model, self.args.optim, self.args.lr, self.args.momentum, self.args.weight_decay, self.args.layer_decay)
         # 调试
-        self.lr_decay_epochs = None
+        # self.lr_decay_epochs = None
         if self.lr_decay_epochs is not None:
             self.lr_decay_epochs = [int(x) for x in self.lr_decay_epochs.split(',')]
             print(self.lr_decay_epochs)
@@ -201,6 +202,8 @@ class AlgorithmBase:
         """
         initialize model
         """
+        if self.args.use_timm:
+            model = timm.create_model(self.args.net, pretrained=True, num_classes=self.num_classes)
         model = self.net_builder(num_classes=self.num_classes, pretrained=self.args.use_pretrain, pretrained_path=self.args.pretrain_path)
         return model
 
