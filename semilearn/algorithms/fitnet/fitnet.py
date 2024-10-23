@@ -61,8 +61,8 @@ class FitNet(AlgorithmBase):
             self.model.eval()
             self.teacher_model.eval()
             data = torch.randn(1, 3, self.args.img_size, self.args.img_size)
-            self.feat_s = self.model(data, only_feat=True)[2]
-            self.feat_t = self.teacher_model(data, only_feat=True)[2]
+            self.feat_s = self.model(data, only_feat=True)[-1]
+            self.feat_t = self.teacher_model(data, only_feat=True)[-1]
             # print("student feature size: ", self.feat_s.shape)
             # print("teacher feature size: ", self.feat_t.shape)
             self.conv_reg = ConvReg(self.feat_s.shape, self.feat_t.shape)
@@ -78,11 +78,11 @@ class FitNet(AlgorithmBase):
 
             outs_x = self.model(input)
             logits_x = outs_x['logits']
-            feats_x = outs_x['feat'][2]
+            feats_x = outs_x['feat'][-1]
             
             with torch.no_grad():
                 outs_x_teacher = self.teacher_model(input)
-                feats_x_teacher = outs_x_teacher['feat'][2]
+                feats_x_teacher = outs_x_teacher['feat'][-1]
 
             feats_x = self.conv_reg(feats_x)
             # print(feats_x.shape, feats_x_teacher.shape)
