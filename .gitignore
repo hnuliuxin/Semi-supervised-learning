@@ -147,3 +147,5 @@ dmypy.json
 # gzipped files
 *.gz
 run.sh
+test.py
+run2.sh
