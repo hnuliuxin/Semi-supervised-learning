@@ -30,13 +30,16 @@ def get_cifar(args, alg, name, num_classes=100, data_dir='./data', include_lb_to
     id_labels_per_class = args.ID_labels_per_class
     ood_classes = args.OOD_classes
     ood_labels_per_class = args.OOD_labels_per_class
+
+    seed = args.seed
+
     if use_val:
         num_labels = id_labels_per_class * num_classes
-        seen_classes = id_classes
+        seen_classes = np.random.RandomState(seed).choice(num_classes, id_classes, replace=False)
         seen_labels_per_class = id_labels_per_class
     else:
         num_labels = ood_labels_per_class * num_classes
-        seen_classes = ood_classes
+        seen_classes = np.random.RandomState(seed).choice(num_classes, ood_classes, replace=False)
         seen_labels_per_class = ood_labels_per_class
 
     data_dir = os.path.join(data_dir, name.lower())
@@ -82,7 +85,7 @@ def get_cifar(args, alg, name, num_classes=100, data_dir='./data', include_lb_to
     test_data, test_targets = dset.data, dset.targets
     # 切割验证集类别
     
-    indices = [i for i in range(len(test_targets)) if test_targets[i] < seen_classes] 
+    indices = [i for i in range(len(test_targets)) if test_targets[i] in seen_classes]
     test_data = [test_data[i] for i in indices]
     test_targets = [test_targets[i] for i in indices]
 
@@ -105,7 +108,7 @@ def get_cifar(args, alg, name, num_classes=100, data_dir='./data', include_lb_to
             ulb_data, ulb_targets = None, None
 
     #切割训练集类别
-    indices = [i for i in range(len(lb_targets)) if lb_targets[i] < seen_classes]   
+    indices = [i for i in range(len(lb_targets)) if lb_targets[i] in seen_classes]  
     lb_data = [lb_data[i] for i in indices]
     lb_targets = [lb_targets[i] for i in indices]
     if use_val:
