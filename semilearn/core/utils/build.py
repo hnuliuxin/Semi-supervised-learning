@@ -21,22 +21,17 @@ def get_net_builder(args, net_name, from_name: bool):
         from_name: If True, net_buidler takes models in torch.vision models. Then, net_conf is ignored.
     """
     if from_name:
-        if args.use_timm:
-            import timm
-            builder = timm.create_model
-            return builder
-        else:
-            import torchvision.models as nets
-            model_name_list = sorted(name for name in nets.__dict__
-                                    if name.islower() and not name.startswith("__")
-                                    and callable(nets.__dict__[name]))
+        import torchvision.models as nets
+        model_name_list = sorted(name for name in nets.__dict__
+                                if name.islower() and not name.startswith("__")
+                                and callable(nets.__dict__[name]))
 
-            if net_name not in model_name_list:
-                assert Exception(f"[!] Networks\' Name is wrong, check net config, \
-                                expected: {model_name_list}  \
-                                received: {net_name}")
-            else:
-                return nets.__dict__[net_name]
+        if net_name not in model_name_list:
+            assert Exception(f"[!] Networks\' Name is wrong, check net config, \
+                            expected: {model_name_list}  \
+                            received: {net_name}")
+        else:
+            return nets.__dict__[net_name]
     else:
         # TODO: fix bug here
         import semilearn.nets as nets
@@ -80,19 +75,27 @@ def get_dataset(args, algorithm, data_dir='./data', include_lb_to_ulb=True):
     # 在此处添加新的数据集
     if dataset == "cifar100_with_tin":
         lb_dset, ulb_dset1, eval_dset = get_cifar(args, algorithm, "cifar100", data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb, use_val=True)
-        _, ulb_dset2, _ = get_tiny_imagenet(args, algorithm, "tiny_imagenet", data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb, is_all_ulb=True, use_val=False)
-        if ulb_dset2 is not None:
+        _, ulb_dset2, _ = get_tiny_imagenet(args, algorithm, "tiny_imagenet", data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb, use_val=False)
+        # print(f"len of ulb_dset1: {len(ulb_dset1)}")
+        # print(f"len of ulb_dset2: {len(ulb_dset2)}")
+        if ulb_dset2 is not None and ulb_dset1 is not None:
             ulb_dset = ConcatDataset([ulb_dset1, ulb_dset2])
-        else :
+        elif ulb_dset2 is None:
             ulb_dset = ulb_dset1
+        else:
+            ulb_dset = ulb_dset2
         test_dset = None
     elif dataset == "tiny_imagenet_with_cifar":
         lb_dset, ulb_dset1, eval_dset = get_tiny_imagenet(args, algorithm, "tiny_imagenet", data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb, use_val=True)
         _, ulb_dset2, _ = get_cifar(args, algorithm, "cifar100", data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb, use_val=False)
-        if ulb_dset2 is not None:
+        # print(f"len of ulb_dset1: {len(ulb_dset1)}")
+        # print(f"len of ulb_dset2: {len(ulb_dset2)}")
+        if ulb_dset2 is not None and ulb_dset1 is not None:
             ulb_dset = ConcatDataset([ulb_dset1, ulb_dset2])
-        else :
-            ulb_dset = ConcatDataset([ulb_dset1, ulb_dset2])
+        elif ulb_dset2 is None:
+            ulb_dset = ulb_dset1
+        else:
+            ulb_dset = ulb_dset2
         test_dset = None
         
 
