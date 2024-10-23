@@ -1,6 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-
+import os
+os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
+import timm
+import torchvision
 import math
 import torch
 import torch.nn as nn
@@ -163,6 +166,35 @@ class WideResNet(nn.Module):
         return nwd
 
 
+class wrn(nn.Module):
+    def __init__(self, net, num_classes, finetune=False) -> None:
+        super().__init__()
+        self.model = timm.create_model(net, pretrained=True, num_classes=num_classes)
+        
+    def forward(self, x, only_fc=False, only_feat=False, feat_s=None, **kwargs):
+        if only_fc:
+            return self.model.fc(x)
+        if feat_s is not None:
+           return self.model.forward_head(feat_s)
+        
+        feat = self.model.forward_features(x)
+        feat_logits = self.model.global_pool(feat)
+        logits = self.model.fc(feat_logits)
+        if only_feat:
+            return [feat, feat_logits]
+        result_dict = {'logits':logits, 'feat':[feat, feat_logits]}
+        return result_dict
+    def group_matcher(self, coarse=False, prefix=''):
+        matcher = dict(stem = r'^{}conv1'.format(prefix),
+                       blocks = r'^{}block(\d+)'.format(prefix) if coarse else r'^{}block(\d+)\.layer.(\d+)'.format(prefix))
+        return matcher
+    def no_weight_decay(self):
+        nwd = []
+        for n, _ in self.named_parameters():
+            if 'bn' in n or 'bias' in n:
+                nwd.append(n)
+        return nwd
+
 def wrn_28_2(pretrained=False, pretrained_path=None, **kwargs):
     model = WideResNet(first_stride=1, depth=28, widen_factor=2, **kwargs)
     if pretrained:
@@ -207,3 +239,6 @@ def wrn_16_2(pretrained=False, pretrained_path=None, **kwargs):
     return model
 
 
+def wide_resnet50_2(pretrained=False, pretrained_path=None, **kwargs):
+    model = wrn('wide_resnet50_2', **kwargs)
+    return model
