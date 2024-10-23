@@ -6,7 +6,8 @@ import logging
 import os
 import random
 import warnings
-
+warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", category=UserWarning)
 import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
@@ -50,6 +51,7 @@ def get_config():
     parser.add_argument(
         "--use_aim", action="store_true", help="Use aim to plot and save curves"
     )
+    parser.add_argument("--use_timm", action="store_true", default=False, help="Use timm")
 
     """
     Training Configuration of FixMatch
@@ -110,6 +112,7 @@ def get_config():
     parser.add_argument("--net_from_name", type=str2bool, default=False)
     parser.add_argument("--use_pretrain", default=False, type=str2bool)
     parser.add_argument("--pretrain_path", default="", type=str)
+    parser.add_argument("--finetune", default=False, type=str2bool)
 
     """
     Algorithms Configurations
