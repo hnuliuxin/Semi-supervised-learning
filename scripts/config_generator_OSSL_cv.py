@@ -65,16 +65,17 @@ def create_ossl_cv_config(
     cfg["use_wandb"] = False
     cfg["use_aim"] = False
 
-    cfg["epoch"] = 200
+    cfg["epoch"] = 100
+    cfg["num_lb"] = ID_classes * ID_labels_per_class
     cfg["num_ulb"] = num_ulb
 
     cfg["batch_size"] = 64
     cfg["eval_batch_size"] = 128
 
-    cfg["iter_per_epoch"] = cfg["num_ulb"] // (cfg["batch_size"] * 2)
+    cfg["iter_per_epoch"] = cfg["num_lb"] // cfg["batch_size"]
     cfg["num_train_iter"] = cfg["epoch"] * cfg["iter_per_epoch"]
-    cfg["num_log_iter"] = cfg["iter_per_epoch"] // 2
-    cfg["num_eval_iter"] = cfg["iter_per_epoch"] 
+    cfg["num_log_iter"] = cfg["iter_per_epoch"] 
+    cfg["num_eval_iter"] = cfg["iter_per_epoch"] * 2
     
 
     cfg["num_warmup_iter"] = int(cfg["iter_per_epoch"] * warmup)
@@ -159,7 +160,7 @@ def create_ossl_cv_config(
 
     return cfg
 
-def exp_ossl_cv(ID_labels_per_class, ID_classes, OOD_classes):
+def exp_ossl_cv(ID_labels_per_class, ID_classes, OOD_classes, OOD_labels):
     config_file = r"./config/ossl_cv/"
     save_path = r"./saved_models/ossl_cv"
 
@@ -181,16 +182,17 @@ def exp_ossl_cv(ID_labels_per_class, ID_classes, OOD_classes):
         "resnet8x4",
         "resnet32x4",
         # "wrn_16_1",
-        # "wrn_40_1",
+        "wrn_40_1",
         # "shuffleV1",
         # "vgg8",
         # "vgg13",
-        # "wrn_40_2"
+        "wrn_40_2"
+        # "resnet18"
     ]
 
     datasets = [
         "cifar100_with_tin",
-        "cinic10"
+        # "tiny_imagenet_with_cifar"
     ]
     seeds = [0, 1, 2]
 
@@ -199,7 +201,7 @@ def exp_ossl_cv(ID_labels_per_class, ID_classes, OOD_classes):
 
     weight_decay = 5e-4
     lr = 5e-2
-    lr_decay_epochs = "100,150,180"
+    lr_decay_epochs = "10,30,60,90"
     layer_decay = 1.0
     warmup = 0
     amp = False
@@ -210,20 +212,15 @@ def exp_ossl_cv(ID_labels_per_class, ID_classes, OOD_classes):
             for net in nets:
                 for seed in seeds:
                     # changes for each dataset
-                    if dataset == "cinic10":
-                        id_classes = ID_classes[0]
-                        id_labels_per_class = ID_labels_per_class[0]
-                        ood_classes = 10 - id_classes
-                        ood_labels_per_class = 9000
-                        num_ulb = 90000
-                        crop_ratio = 0.875
-                    else:
-                        id_classes = ID_classes[1]
-                        id_labels_per_class = ID_labels_per_class[1]
-                        ood_classes = OOD_classes[0]
-                        ood_labels_per_class = 500
-                        num_ulb = 50000 + ood_classes * ood_labels_per_class
-                        crop_ratio = 0.875
+                    id_classes = ID_classes
+                    id_labels_per_class = ID_labels_per_class
+                    ood_classes = OOD_classes
+                    sum_labels = id_labels_per_class * id_classes + OOD_labels
+                    # ood_labels_per_class = 500
+                    ood_labels_per_class = sum_labels // (ood_classes + id_classes)
+
+                    num_ulb = OOD_labels + id_labels_per_class * id_classes
+                    crop_ratio = 0.875
 
                     port = dist_port[count]
                     cfg = create_ossl_cv_config(
@@ -254,15 +251,17 @@ if __name__ == "__main__":
         os.makedirs("./saved_models/ossl_cv/", exist_ok=True)
     if not os.path.exists("./config/ossl_cv/"):
         os.makedirs("./config/ossl_cv/", exist_ok=True)
-    ID_labels_per_class = {"s": [1800, 100], "m": [3600,200], "l":[5400,300], "sl":[7200,400], "full":[9000, 500]}
-    ID_classes = {"s": [3, 30], "m": [5, 50], "l":[7, 70], "full":[10, 100]}
-    OOD_classes = {"s": [100], "m": [150], "l":[200]}
+    ID_labels_per_classes = [200, 250]
+    ID_classes = [100]
+    OOD_classes = [50, 100, 150, 200]
+    OOD_labels = [40000, 50000]
 
-    for i in ID_labels_per_class:
+    for i in range(len(ID_labels_per_classes)):
         for j in ID_classes:
             for k in OOD_classes:
-                exp_ossl_cv(ID_labels_per_class=ID_labels_per_class[i],
-                    ID_classes=ID_classes[j],
-                    OOD_classes=OOD_classes[k])
+                exp_ossl_cv(ID_labels_per_class=ID_labels_per_classes[i],
+                    ID_classes=j,
+                    OOD_classes=k,
+                    OOD_labels=OOD_labels[i])
 
 
