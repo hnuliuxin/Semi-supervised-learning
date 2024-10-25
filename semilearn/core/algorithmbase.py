@@ -203,13 +203,15 @@ class AlgorithmBase:
         initialize model
         """
         model = self.net_builder(num_classes=self.num_classes, pretrained=self.args.use_pretrain, pretrained_path=self.args.pretrain_path)
-        # 查看模型结构
-        # for name, param in model.named_parameters():
-        #     print(name, param.size())
+        
         if self.args.finetune:
             for name, param in model.named_parameters():
                 if 'fc' not in name:
                     param.requires_grad = False
+        # 查看模型结构
+        for name, param in model.named_parameters():
+            print(name, param.size(), param.requires_grad)
+
         return model
 
     def set_teacher_model(self):
