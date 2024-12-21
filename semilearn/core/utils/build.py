@@ -74,8 +74,9 @@ def get_dataset(args, algorithm, data_dir='./data', include_lb_to_ulb=True):
 
     # 在此处添加新的数据集
     if dataset == "cifar100_with_tin":
-        lb_dset, ulb_dset1, eval_dset = get_cifar(args, algorithm, "cifar100", data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb, use_val=True)
-        _, ulb_dset2, _ = get_tiny_imagenet(args, algorithm, "tiny_imagenet", data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb, use_val=False)
+        lb_dset, ulb_dset1, eval_dset = get_cifar(args, algorithm, "cifar100", data_dir=data_dir, use_val=True, include_lb_to_ulb=include_lb_to_ulb)
+  
+        _, ulb_dset2, _ = get_tiny_imagenet(args, algorithm, "tiny_imagenet", data_dir=data_dir, use_val=False)
         # print(f"len of ulb_dset1: {len(ulb_dset1)}")
         # print(f"len of ulb_dset2: {len(ulb_dset2)}")
         if ulb_dset2 is not None and ulb_dset1 is not None:
@@ -86,8 +87,8 @@ def get_dataset(args, algorithm, data_dir='./data', include_lb_to_ulb=True):
             ulb_dset = ulb_dset2
         test_dset = None
     elif dataset == "tiny_imagenet_with_cifar":
-        lb_dset, ulb_dset1, eval_dset = get_tiny_imagenet(args, algorithm, "tiny_imagenet", data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb, use_val=True)
-        _, ulb_dset2, _ = get_cifar(args, algorithm, "cifar100", data_dir=data_dir, include_lb_to_ulb=include_lb_to_ulb, use_val=False)
+        lb_dset, ulb_dset1, eval_dset = get_tiny_imagenet(args, algorithm, "tiny_imagenet", data_dir=data_dir, use_val=True, include_lb_to_ulb=include_lb_to_ulb)
+        _, ulb_dset2, _ = get_cifar(args, algorithm, "cifar100", data_dir=data_dir, use_val=False)
         # print(f"len of ulb_dset1: {len(ulb_dset1)}")
         # print(f"len of ulb_dset2: {len(ulb_dset2)}")
         if ulb_dset2 is not None and ulb_dset1 is not None:
