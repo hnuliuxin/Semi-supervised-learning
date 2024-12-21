@@ -9,12 +9,12 @@ import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
 from torch.utils.data import DataLoader
-from semilearn.core.utils import get_net_builder, get_dataset
+from semilearn.core.utils import get_net_builder, get_dataset, AverageMeter
 
 
 
 def eval(args, net, eval_loader):
-    acc = 0.0
+    acc = AverageMeter()
     # test_feats = []
     # test_preds = []
     # test_probs = []
@@ -51,7 +51,8 @@ def eval(args, net, eval_loader):
             # print(type(pred))
             # print(f"pred[:5]: {pred[:5]}")
 
-            acc += target.cpu().eq(pred).sum().item()
+            # acc += target.cpu().eq(pred).sum().item()
+            acc.update(target.cpu().eq(pred).sum().item(), len(target))
 
     #         test_feats.append(feat.cpu().numpy())
     #         test_preds.append(pred.cpu().numpy())
