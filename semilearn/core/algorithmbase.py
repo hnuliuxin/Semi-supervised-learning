@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-
+import gc
 import os
 import timm
 import contextlib
@@ -14,7 +14,7 @@ import torch.nn.functional as F
 from torch.cuda.amp import autocast, GradScaler
 
 from semilearn.core.hooks import Hook, get_priority, CheckpointHook, TimerHook, LoggingHook, DistSamplerSeedHook, ParamUpdateHook, EvaluationHook, EMAHook, WANDBHook, AimHook
-from semilearn.core.utils import get_dataset, get_data_loader, get_optimizer, get_cosine_schedule_with_warmup, Bn_Controller
+from semilearn.core.utils import get_dataset, get_data_loader, get_optimizer, get_cosine_schedule_with_warmup, Bn_Controller, AverageMeter
 from semilearn.core.criterions import CELoss, ConsistencyLoss
 
 
@@ -208,9 +208,9 @@ class AlgorithmBase:
             for name, param in model.named_parameters():
                 if 'fc' not in name:
                     param.requires_grad = False
-        # 查看模型结构
-        for name, param in model.named_parameters():
-            print(name, param.size(), param.requires_grad)
+        # # 查看模型结构
+        # for name, param in model.named_parameters():
+        #     print(name, param.size(), param.requires_grad)
 
         return model
 
@@ -219,9 +219,8 @@ class AlgorithmBase:
         initialize teacher model
         """
         print("teacher model path:", self.args.net_teacher_path)
-        teacher_model = self.teacher_net_builder(num_classes=self.num_classes, pretrained=True, pretrained_path=self.args.net_teacher_path)
+        return self.teacher_net_builder(num_classes=self.num_classes, pretrained=True, pretrained_path=self.args.net_teacher_path)
         
-        return teacher_model
 
     def set_ema_model(self):
         """
@@ -344,6 +343,7 @@ class AlgorithmBase:
                     self.it += 1
 
                 self.call_hook("after_train_epoch")
+                self.scheduler.step()
         else:
             for epoch in range(self.start_epoch, self.epochs):
                 self.epoch = epoch
@@ -375,6 +375,10 @@ class AlgorithmBase:
                 
                 self.call_hook("after_train_epoch")
                 self.scheduler.step()
+                # info = torch.cuda.memory_summary(device=None, abbreviated=False)
+                # print(info)
+                torch.cuda.empty_cache()
+                gc.collect()
 
         self.call_hook("after_run")
 
@@ -387,7 +391,7 @@ class AlgorithmBase:
         self.ema.apply_shadow()
 
         eval_loader = self.loader_dict[eval_dest]
-        total_loss = 0.0
+        total_loss = AverageMeter()
         total_num = 0.0
         y_true = []
         y_pred = []
@@ -414,7 +418,8 @@ class AlgorithmBase:
                 y_pred.extend(torch.max(logits, dim=-1)[1].cpu().tolist())
                 y_logits.append(logits.cpu().numpy())
                 y_probs.extend(torch.softmax(logits, dim=-1).cpu().tolist())
-                total_loss += loss.item() * num_batch
+                # total_loss += loss.item() * num_batch
+                total_loss.update(loss.item(), num_batch)
         y_true = np.array(y_true)
         y_pred = np.array(y_pred)
         y_logits = np.concatenate(y_logits)
@@ -430,10 +435,14 @@ class AlgorithmBase:
         self.ema.restore()
         self.model.train()
 
-        eval_dict = {eval_dest+'/loss': total_loss / total_num, eval_dest+'/top-1-acc': top1, eval_dest+'/top-5-acc': top5, 
+        eval_dict = {eval_dest+'/loss': total_loss.avg, eval_dest+'/top-1-acc': top1, eval_dest+'/top-5-acc': top5, 
                      eval_dest+'/balanced_acc': balanced_top1, eval_dest+'/precision': precision, eval_dest+'/recall': recall, eval_dest+'/F1': F1}
         if return_logits:
             eval_dict[eval_dest+'/logits'] = y_logits
+        
+        torch.cuda.empty_cache()
+        gc.collect()
+
         return eval_dict
 
 
