@@ -25,11 +25,15 @@ std['cifar100'] = [x / 255 for x in [68.2, 65.4, 70.4]]
 
 
 
-def get_cifar(args, alg, name, num_classes=100, data_dir='./data', include_lb_to_ulb=True, use_val=True):
+def get_cifar(args, alg, name, num_classes=100, data_dir='./data', use_val=True, include_lb_to_ulb=False):
     id_classes = args.ID_classes
     id_labels_per_class = args.ID_labels_per_class
     ood_classes = args.OOD_classes
     ood_labels_per_class = args.OOD_labels_per_class
+    if use_val:
+        id_ulabels = args.num_ulb - ood_classes * ood_labels_per_class - id_classes * id_labels_per_class
+        print(f"id_ulabels: {id_ulabels}")
+
 
     seed = args.seed
 
@@ -99,21 +103,37 @@ def get_cifar(args, alg, name, num_classes=100, data_dir='./data', include_lb_to
                                                                 ulb_num_labels=args.ulb_num_labels,
                                                                 lb_imbalance_ratio=args.lb_imb_ratio,
                                                                 ulb_imbalance_ratio=args.ulb_imb_ratio,
-                                                                include_lb_to_ulb=include_lb_to_ulb)
+                                                                include_lb_to_ulb=False)
     else:
         lb_data, lb_targets= data, targets
-        if include_lb_to_ulb:
-            ulb_data, ulb_targets = data, targets
-        else:
-            ulb_data, ulb_targets = None, None
+        ulb_data, ulb_targets = None, None
 
     #切割训练集类别
     indices = [i for i in range(len(lb_targets)) if lb_targets[i] in seen_classes]  
     lb_data = [lb_data[i] for i in indices]
     lb_targets = [lb_targets[i] for i in indices]
+
+
+    need_data, need_targets = None, None
     if use_val:
         lb_dset = BasicDataset(alg, lb_data, lb_targets, num_classes, transform_weak, False, transform_strong, transform_strong, False)
-        ulb_dset = BasicDataset(alg, ulb_data, ulb_targets, num_classes, transform_weak, True, transform_medium, transform_strong, False)
+        ulb_dset = None
+        if id_ulabels != 0:
+            if id_ulabels != len(ulb_targets):
+                need_data, need_targets, _, _ = split_ssl_data(args, ulb_data, ulb_targets, num_classes, 
+                                                            lb_num_labels=id_ulabels,
+                                                            ulb_num_labels=None,
+                                                            lb_imbalance_ratio=args.lb_imb_ratio,
+                                                            ulb_imbalance_ratio=args.ulb_imb_ratio,
+                                                            include_lb_to_ulb=False)
+            else:
+                need_data, need_targets = ulb_data, ulb_targets
+            print(f"need_data: {len(need_data)}")
+            if include_lb_to_ulb:
+                need_data = np.concatenate([lb_data, need_data], axis=0)
+                need_targets = np.concatenate([lb_targets, need_targets], axis=0) 
+                
+            ulb_dset = BasicDataset(alg, need_data, need_targets, num_classes, transform_weak, True, transform_medium, transform_strong, False)
     else:
         lb_dset = None
         ulb_dset = BasicDataset(alg, lb_data, lb_targets, num_classes, transform_weak, True, transform_medium, transform_strong, False)

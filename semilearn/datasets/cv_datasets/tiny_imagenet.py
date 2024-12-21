@@ -50,11 +50,14 @@ mean, std = {}, {}
 mean['tiny_imagenet'] = [0.4802, 0.4481, 0.3975]
 std['tiny_imagenet'] = [0.2770, 0.2691, 0.2821]
 
-def get_tiny_imagenet(args, alg, name, num_classes=200, data_dir='./data', include_lb_to_ulb=True,use_val=True):
+def get_tiny_imagenet(args, alg, name, num_classes=200, data_dir='./data', use_val=True, include_lb_to_ulb=False):
     id_classes = args.ID_classes
     id_labels_per_class = args.ID_labels_per_class
     ood_classes = args.OOD_classes
     ood_labels_per_class = args.OOD_labels_per_class
+    if use_val:
+        id_ulabels = args.num_ulb - ood_classes * ood_labels_per_class - id_classes * id_labels_per_class
+        print(f"id_ulabels: {id_ulabels}")
 
     seed = args.seed
 
@@ -66,8 +69,7 @@ def get_tiny_imagenet(args, alg, name, num_classes=200, data_dir='./data', inclu
         num_labels = ood_labels_per_class * num_classes
         seen_classes = np.random.RandomState(seed).choice(num_classes, ood_classes, replace=False)
         seen_labels_per_class = ood_labels_per_class
-        if seen_classes == 0:
-            return None, None, None
+        
 
     data_dir = os.path.join(data_dir, name.lower())
     train_path = os.path.join(data_dir, 'train')
@@ -131,22 +133,29 @@ def get_tiny_imagenet(args, alg, name, num_classes=200, data_dir='./data', inclu
                                                                 ulb_num_labels=args.ulb_num_labels,
                                                                 lb_imbalance_ratio=args.lb_imb_ratio,
                                                                 ulb_imbalance_ratio=args.ulb_imb_ratio,
-                                                                include_lb_to_ulb=include_lb_to_ulb)
+                                                                include_lb_to_ulb=False)
     else:
         lb_data, lb_targets = data, targets
-        if include_lb_to_ulb:
-            ulb_data, ulb_targets = data, targets
-        else:
-            ulb_data, ulb_targets = None, None
+        ulb_data, ulb_targets = None, None
 
     # 划分开集类
-    indices = [i for i, target in enumerate(targets) if target in seen_classes]
-    data = [data[i] for i in indices]
-    targets = [targets[i] for i in indices]
+    indices = [i for i in range(len(lb_targets)) if lb_targets[i] in seen_classes]
+    lb_data = [lb_data[i] for i in indices]
+    lb_targets = [lb_targets[i] for i in indices]
 
     if use_val:
+        if id_ulabels != 0: 
+            if id_ulabels == len(ulb_targets):
+                need_data, need_targets = ulb_data, ulb_targets
+            else:
+                need_data, need_targets, _, _ = split_ssl_data(args, ulb_data, ulb_targets, num_classes,
+                                                            lb_num_labels=id_ulabels,
+                                                            ulb_num_labels=None,
+                                                            lb_imbalance_ratio=args.lb_imb_ratio,
+                                                            ulb_imbalance_ratio=args.ulb_imb_ratio,
+                                                            include_lb_to_ulb=False)
         lb_dset = BasicDataset(alg, lb_data, lb_targets, num_classes, transform_weak, False, transform_strong, transform_strong, False, data_type='pil')
-        ulb_dset = BasicDataset(alg, ulb_data, ulb_targets, num_classes, transform_weak, True, transform_medium, transform_strong, False, data_type='pil')
+        ulb_dset = BasicDataset(alg, need_data, need_targets, num_classes, transform_weak, True, transform_medium, transform_strong, False, data_type='pil')
     else:
         lb_dset = None
         ulb_dset = BasicDataset(alg, lb_data, lb_targets, num_classes, transform_weak, True, transform_medium, transform_strong, False, data_type='pil')
