@@ -36,7 +36,7 @@ class KD(AlgorithmBase):
     def __init__(self, args, net_builder, tb_log=None, logger=None, teacher_net_builder=None):
         super().__init__(args, net_builder, tb_log, logger, teacher_net_builder)
         self.init(T=args.T, gamma=args.gamma, alpha=args.alpha)
-
+        
 
     def init(self, T, gamma=1, alpha=1, beta=1):
         self.T = T
@@ -44,7 +44,7 @@ class KD(AlgorithmBase):
         self.alpha = alpha
         self.beta = beta
 
-    
+
 
     def train_step(self, x_lb, y_lb, x_ulb_w = None):
         with self.amp_cm():
@@ -70,9 +70,10 @@ class KD(AlgorithmBase):
                 feat_dict['x_unlb'] = outs_x_unlb['feat'][-1]
 
             sup_loss = self.ce_loss(logits_x_lb, y_lb, reduction='mean')
-
+            kd_loss = 0
             # 删除
-            # kd_loss = KD_Loss(logits_x_lb, logits_x_lb_teacher, self.T)
+            if not self.args.include_lb_to_ulb:
+                kd_loss = KD_Loss(logits_x_lb, logits_x_lb_teacher, self.T)
             if x_ulb_w is not None:
                 unsup_kd_loss = KD_Loss(logits_x_unlb, logits_x_unlb_teacher, self.T)
             else:
@@ -81,8 +82,9 @@ class KD(AlgorithmBase):
 
         out_dict = self.process_out_dict(loss=total_loss, feat=feat_dict)
         log_dict = self.process_log_dict(sup_loss=sup_loss.item(), 
-                                        #  kd_loss=kd_loss.item(), 
-                                         unsup_kd_loss=unsup_kd_loss.item() if x_ulb_w is not None else 0,)
+                                         kd_loss=kd_loss.item() if kd_loss != 0 else 0, 
+                                         unsup_kd_loss=unsup_kd_loss.item() if x_ulb_w is not None else 0,
+                                         epoch=self.epoch)
         return out_dict, log_dict
 
     def get_save_dict(self):

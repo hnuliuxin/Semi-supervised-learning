@@ -167,7 +167,9 @@ class SRD(AlgorithmBase):
             cls_loss = self.ce_loss(logits_x[:batch_size], y_lb, reduction='mean')
 
             # 因为有include_lb_to_ulb,重复计算了有标签的蒸馏损失
-            # div_loss = KD_Loss(logits_x, logits_x_t, self.T)
+            div_loss = 0
+            if not self.args.include_lb_to_ulb:
+                div_loss = KD_Loss(logits_x, logits_x_t, self.T)
             # kd_loss = 0
             kd_loss = self.criterion_kd_weight * statm_loss(feats_x, feats_x_t) + F.mse_loss(logit_tc, logits_x_t)
             
@@ -176,7 +178,7 @@ class SRD(AlgorithmBase):
 
         out_dict = self.process_out_dict(loss = total_loss)
         log_dict = self.process_log_dict(cls_loss=cls_loss.item(), 
-                                        #  div_loss=div_loss.item(), 
+                                         div_loss=div_loss.item() if div_loss != 0 else 0, 
                                          kd_loss=kd_loss.item()
                                          )
     
