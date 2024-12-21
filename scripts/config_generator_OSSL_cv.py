@@ -65,7 +65,7 @@ def create_ossl_cv_config(
     cfg["use_wandb"] = False
     cfg["use_aim"] = False
 
-    cfg["epoch"] = 100
+    cfg["epoch"] = 200
     cfg["num_lb"] = ID_classes * ID_labels_per_class
     cfg["num_ulb"] = num_ulb
 
@@ -141,7 +141,7 @@ def create_ossl_cv_config(
     cfg["data_dir"] = "./data"
     cfg["dataset"] = dataset
     cfg["train_sampler"] = "RandomSampler"
-    cfg["num_workers"] = 8
+    cfg["num_workers"] = 4
 
     # basic config
     cfg["seed"] = seed
@@ -201,7 +201,7 @@ def exp_ossl_cv(ID_labels_per_class, ID_classes, OOD_classes, OOD_labels):
 
     weight_decay = 5e-4
     lr = 5e-2
-    lr_decay_epochs = "10,30,60,90"
+    lr_decay_epochs = "20,60,100,150"
     layer_decay = 1.0
     warmup = 0
     amp = False
