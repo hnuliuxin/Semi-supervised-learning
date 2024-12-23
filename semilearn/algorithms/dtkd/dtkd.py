@@ -70,10 +70,10 @@ class DTKD(AlgorithmBase):
                 
             cls_loss = self.ce_loss(logits_x_lb, y_lb, reduction='mean')
 
-            mask = self.call_hook("masking", "MaskingHook", logits_x_ulb=logits_x_lb_teacher)
+            mask = self.call_hook("masking", "MaskingHook", logits_x_ulb=logits_x_ulb_teacher)
 
             pseudo_label = self.call_hook("gen_ulb_targets", "PseudoLabelingHook", 
-                                          logits=logits_x_lb_teacher, 
+                                          logits=logits_x_ulb_teacher, 
                                           use_hard_label=False,
                                           T=self.T,
                                           softmax=True)
