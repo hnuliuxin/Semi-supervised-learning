@@ -127,8 +127,8 @@ def create_oskd_cv_config(
         net=cfg["net_teacher"],
         ID_class=cfg["ID_classes"],
         ID_labels_per_class=cfg["ID_labels_per_class"],
-        OOD_class=200,
-        OOD_labels_per_class= (cfg["num_ulb"] - cfg["ID_classes"] * cfg["ID_labels_per_class"]) // 200,
+        OOD_class=cfg["OOD_classes"],
+        OOD_labels_per_class= cfg["OOD_labels_per_class"],
         seed=seed
     ))
 
@@ -141,18 +141,18 @@ def create_oskd_cv_config(
     cfg["data_dir"] = "./data"
     cfg["dataset"] = dataset
     cfg["train_sampler"] = "RandomSampler"
-    cfg["num_workers"] = 4
+    cfg["num_workers"] = 6
 
     # basic config
     cfg["seed"] = seed
 
     # distributed config
-    cfg["world_size"] = 1
-    cfg["rank"] = 0
-    cfg["multiprocessing_distributed"] = True
+    cfg["world_size"] = -1
+    cfg["rank"] = -1
+    cfg["multiprocessing_distributed"] = False
     cfg["dist_url"] = "tcp://127.0.0.1:" + str(port)
     cfg["dist_backend"] = "nccl"
-    cfg["gpu"] = None
+    cfg["gpu"] = 0
 
     # other config
     cfg["overwrite"] = True
@@ -175,7 +175,7 @@ def exp_oskd_cv(ID_labels_per_class, ID_classes, OOD_classes, OOD_labels):
         # "crd",
         # "srd",
         # "fitnet",
-        # "dtkd",
+        "dtkd",
         # "pad"
     ]
 
