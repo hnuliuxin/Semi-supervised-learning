@@ -141,18 +141,18 @@ def create_ossl_cv_config(
     cfg["data_dir"] = "./data"
     cfg["dataset"] = dataset
     cfg["train_sampler"] = "RandomSampler"
-    cfg["num_workers"] = 4
+    cfg["num_workers"] = 6
 
     # basic config
     cfg["seed"] = seed
 
     # distributed config
-    cfg["world_size"] = 1
-    cfg["rank"] = 0
-    cfg["multiprocessing_distributed"] = True
+    cfg["world_size"] = -1
+    cfg["rank"] = -1
+    cfg["multiprocessing_distributed"] = False
     cfg["dist_url"] = "tcp://127.0.0.1:" + str(port)
     cfg["dist_backend"] = "nccl"
-    cfg["gpu"] = None
+    cfg["gpu"] = 1
 
     # other config
     cfg["overwrite"] = True
@@ -171,17 +171,17 @@ def exp_ossl_cv(ID_labels_per_class, ID_classes, OOD_classes, OOD_labels):
     
     algs = [
         # "fixmatch",
-        # "pseudolabel",
+        "pseudolabel",
         # "meanteacher",
         # "dash",
         "supervised",
-        # "iomatch",
+        "iomatch",
     ]
 
     nets = [
         "resnet8x4",
         "resnet32x4",
-        # "wrn_16_1",
+        "wrn_16_1",
         "wrn_40_1",
         # "shuffleV1",
         # "vgg8",
