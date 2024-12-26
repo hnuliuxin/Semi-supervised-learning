@@ -84,40 +84,60 @@
 
 ############################################
 
-python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_1_100_200_50_400_0.yaml
-python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_1_100_200_100_300_0.yaml
-python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_1_100_200_150_240_0.yaml
-python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_1_100_200_200_200_0.yaml
+# python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_1_100_200_50_400_0.yaml
+# python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_1_100_200_100_300_0.yaml
+# python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_1_100_200_150_240_0.yaml
+# python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_1_100_200_200_200_0.yaml
 
 
-python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_2_100_200_50_400_0.yaml
-python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_2_100_200_100_300_0.yaml
-python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_2_100_200_150_240_0.yaml
-python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_2_100_200_200_200_0.yaml
+# python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_2_100_200_50_400_0.yaml
+# python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_2_100_200_100_300_0.yaml
+# python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_2_100_200_150_240_0.yaml
+# python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_2_100_200_200_200_0.yaml
 
-python train.py --c config/oskd_cv/kd/kd_cifar100_with_tin_wrn_40_2_wrn_40_1_100_200_50_400_0.yaml
-python train.py --c config/oskd_cv/kd/kd_cifar100_with_tin_wrn_40_2_wrn_40_1_100_200_100_300_0.yaml
-python train.py --c config/oskd_cv/kd/kd_cifar100_with_tin_wrn_40_2_wrn_40_1_100_200_150_240_0.yaml
-python train.py --c config/oskd_cv/kd/kd_cifar100_with_tin_wrn_40_2_wrn_40_1_100_200_200_200_0.yaml
+# python train.py --c config/oskd_cv/kd/kd_cifar100_with_tin_wrn_40_2_wrn_40_1_100_200_50_400_0.yaml
+# python train.py --c config/oskd_cv/kd/kd_cifar100_with_tin_wrn_40_2_wrn_40_1_100_200_100_300_0.yaml
+# python train.py --c config/oskd_cv/kd/kd_cifar100_with_tin_wrn_40_2_wrn_40_1_100_200_150_240_0.yaml
+# python train.py --c config/oskd_cv/kd/kd_cifar100_with_tin_wrn_40_2_wrn_40_1_100_200_200_200_0.yaml
 
-############################################
-
-
-python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_1_100_250_50_500_0.yaml
-python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_1_100_250_100_375_0.yaml
-python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_1_100_250_150_300_0.yaml
-python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_1_100_250_200_250_0.yaml
+# ############################################
 
 
-python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_2_100_250_50_500_0.yaml
-python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_2_100_250_100_375_0.yaml
-python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_2_100_250_150_300_0.yaml
-python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_2_100_250_200_250_0.yaml
-
-python train.py --c config/oskd_cv/kd/kd_cifar100_with_tin_wrn_40_2_wrn_40_1_100_250_50_500_0.yaml
-python train.py --c config/oskd_cv/kd/kd_cifar100_with_tin_wrn_40_2_wrn_40_1_100_250_100_375_0.yaml
-python train.py --c config/oskd_cv/kd/kd_cifar100_with_tin_wrn_40_2_wrn_40_1_100_250_150_300_0.yaml
-python train.py --c config/oskd_cv/kd/kd_cifar100_with_tin_wrn_40_2_wrn_40_1_100_250_200_250_0.yaml
+# python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_1_100_250_50_500_0.yaml
+# python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_1_100_250_100_375_0.yaml
+# python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_1_100_250_150_300_0.yaml
+# python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_1_100_250_200_250_0.yaml
 
 
+# python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_2_100_250_50_500_0.yaml
+# python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_2_100_250_100_375_0.yaml
+# python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_2_100_250_150_300_0.yaml
+# python train.py --c config/ossl_cv/supervised/supervised_cifar100_with_tin_wrn_40_2_100_250_200_250_0.yaml
 
+# python train.py --c config/oskd_cv/kd/kd_cifar100_with_tin_wrn_40_2_wrn_40_1_100_250_50_500_0.yaml
+# python train.py --c config/oskd_cv/kd/kd_cifar100_with_tin_wrn_40_2_wrn_40_1_100_250_100_375_0.yaml
+# python train.py --c config/oskd_cv/kd/kd_cifar100_with_tin_wrn_40_2_wrn_40_1_100_250_150_300_0.yaml
+# python train.py --c config/oskd_cv/kd/kd_cifar100_with_tin_wrn_40_2_wrn_40_1_100_250_200_250_0.yaml
+
+
+
+python train.py --c config/ossl_cv/iomatch/iomatch_cifar100_with_tin_resnet8x4_100_200_50_400_0.yaml 
+python train.py --c config/ossl_cv/iomatch/iomatch_cifar100_with_tin_resnet8x4_100_200_100_300_0.yaml 
+python train.py --c config/ossl_cv/iomatch/iomatch_cifar100_with_tin_resnet8x4_100_200_150_240_0.yaml 
+python train.py --c config/ossl_cv/iomatch/iomatch_cifar100_with_tin_resnet8x4_100_200_200_200_0.yaml 
+
+python train.py --c config/ossl_cv/iomatch/iomatch_cifar100_with_tin_resnet8x4_100_250_50_500_0.yaml 
+python train.py --c config/ossl_cv/iomatch/iomatch_cifar100_with_tin_resnet8x4_100_250_100_375_0.yaml 
+python train.py --c config/ossl_cv/iomatch/iomatch_cifar100_with_tin_resnet8x4_100_250_150_300_0.yaml 
+python train.py --c config/ossl_cv/iomatch/iomatch_cifar100_with_tin_resnet8x4_100_250_200_250.yaml 
+
+## wrn40_1
+python train.py --c config/ossl_cv/iomatch/iomatch_cifar100_with_tin_wrn_40_1_100_200_50_400_0.yaml 
+python train.py --c config/ossl_cv/iomatch/iomatch_cifar100_with_tin_wrn_40_1_100_200_100_300_0.yaml 
+python train.py --c config/ossl_cv/iomatch/iomatch_cifar100_with_tin_wrn_40_1_100_200_150_240_0.yaml 
+python train.py --c config/ossl_cv/iomatch/iomatch_cifar100_with_tin_wrn_40_1_100_200_200_200_0.yaml 
+
+python train.py --c config/ossl_cv/iomatch/iomatch_cifar100_with_tin_wrn_40_1_100_250_50_500_0.yaml 
+python train.py --c config/ossl_cv/iomatch/iomatch_cifar100_with_tin_wrn_40_1_100_250_100_375_0.yaml 
+python train.py --c config/ossl_cv/iomatch/iomatch_cifar100_with_tin_wrn_40_1_100_250_150_300_0.yaml 
+python train.py --c config/ossl_cv/iomatch/iomatch_cifar100_with_tin_wrn_40_1_100_250_200_250.yaml 
