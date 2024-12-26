@@ -1,1 +1,1 @@
-from .dtkd import DTKD
+from .dtkd import DTKD, DTKDV2
