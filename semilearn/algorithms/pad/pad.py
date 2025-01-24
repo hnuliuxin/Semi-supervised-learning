@@ -5,23 +5,28 @@ from semilearn.core import AlgorithmBase
 from semilearn.core.utils import ALGORITHMS
 from semilearn.algorithms.utils import SSL_Argument
 
+def KD_Loss(logits_student, logits_teacher, temperature):
+    log_pred_student = F.log_softmax(logits_student / temperature, dim=1)
+    pred_teacher = F.softmax(logits_teacher / temperature, dim=1)
+    loss_kd = F.kl_div(log_pred_student, pred_teacher, reduction="none").sum(1).mean()
+    loss_kd *= temperature**2
+    return loss_kd
+
 class PADNet(nn.Module):
     def __init__(self, backbone, feat_s_shape, feat_t_shape):
         super().__init__()
         self.backbone = backbone
         self.feat_s_shape = feat_s_shape
         self.feat_t_shape = feat_t_shape
-        self.connector = nn.Sequential(
-            nn.Conv2d(feat_s_shape[1], feat_t_shape[1], kernel_size=1, stride=1, padding=0, bias=False),
-            nn.BatchNorm2d(feat_t_shape[1]),
-            nn.ReLU())
+        self.connector = nn.Linear(feat_s_shape[1], feat_t_shape[1])
         self.var_estimator = nn.Sequential(
             nn.Linear(feat_t_shape[1], feat_t_shape[1]),
             nn.BatchNorm1d(feat_t_shape[1])
         )
-        nn.init.xavier_normal_(self.connector[0].weight)
-        nn.init.constant_(self.connector[1].weight, 1)
-        nn.init.constant_(self.connector[1].bias, 0)
+        nn.init.xavier_normal_(self.connector.weight)
+        nn.init.constant_(self.connector.bias, 0)
+        # nn.init.constant_(self.connector[1].weight, 1)
+        # nn.init.constant_(self.connector[1].bias, 0)
         nn.init.xavier_normal_(self.var_estimator[0].weight)
         nn.init.constant_(self.var_estimator[1].weight, 1)
         nn.init.constant_(self.var_estimator[1].bias, 0)    
@@ -108,18 +113,22 @@ class PAD(AlgorithmBase):
 
             sup_loss = self.ce_loss(logits_x[:batch_size], y_lb, reduction='mean')
 
-            if self.it / 2048 < 130:
-                kd_loss = self.consistency_loss(feats_x, feats_x_teacher, name = "mse")
+            if self.it / 1024 < 0:
+                # kd_loss = self.consistency_loss(feats_x, feats_x_teacher, name = "mse")
+                kd_loss = KD_Loss(logits_x, logits_x_teacher, self.T)
             else:
                 kd_loss = torch.mean(
                     (feats_x - feats_x_teacher) ** 2 / (self.eps + torch.exp(log_variances))
                     + log_variances, dim=1)
+                kd_loss = torch.mean(kd_loss)
+            # kd_loss += KD_Loss(logits_x, logits_x_teacher, self.T)
 
             total_loss = sup_loss * self.gamma + kd_loss * self.alpha
 
         out_dict = self.process_out_dict(loss=total_loss)
         log_dict = self.process_log_dict(sup_loss=sup_loss.item(), 
-                                         kd_loss=kd_loss.item())
+                                         kd_loss=kd_loss.item(),
+                                         epoch=self.epoch+1)
         return out_dict, log_dict
     
     def get_save_dict(self):

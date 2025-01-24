@@ -132,10 +132,10 @@ def create_ossl_cv_config(
     # distributed config
     cfg["world_size"] = 1
     cfg["rank"] = 0
-    cfg["multiprocessing_distributed"] = True
+    cfg["multiprocessing_distributed"] = False
     cfg["dist_url"] = "tcp://127.0.0.1:" + str(port)
     cfg["dist_backend"] = "nccl"
-    cfg["gpu"] = None
+    cfg["gpu"] = 0
 
     # other config
     cfg["overwrite"] = True
@@ -159,7 +159,8 @@ def exp_OSKD_cv(label_amount):
         "srd",
         "fitnet",
         "dtkd",
-        "pad"
+        "pad",
+        "my"
     ]
 
     nets = [
