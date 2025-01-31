@@ -82,7 +82,7 @@ class MyAlgorithm(AlgorithmBase):
         weights = torch.nn.Parameter(torch.tensor([1.0, 1.0, 1.0, 1.0, 10]), requires_grad=True).to(self.args.gpu)
         self.gamma = weights[0]
         self.kl = weights[1]
-        # self.pad = weights[2]
+        self.pad = weights[2]
         # self.srd = weights[3]
         self.unsup_weight = weights[4]
         self.eps = 1e-6
@@ -134,21 +134,21 @@ class MyAlgorithm(AlgorithmBase):
             # srd_loss = F.mse_loss(logits_x, logits_x_t)
             # srd_loss = 0
 
-            # pad_loss = torch.mean(
-            #         (feats_x[index] - feats_x_t[index]) ** 2 / (self.eps + torch.exp(log_variances[index]))
-            #         + log_variances[index], dim=1).mean()  
+            pad_loss = torch.mean(
+                    (feats_x[index] - feats_x_t[index]) ** 2 / (self.eps + torch.exp(log_variances[index]))
+                    + log_variances[index], dim=1).mean()  
             # pad_loss = 0
             
             #求和
             total_loss = (1 / self.gamma) * sup_loss + (1 / self.unsup_weight) * unsup_loss + \
-                  (1 / self.kl) * kl_loss + \
-                    2 * torch.log(self.gamma * self.unsup_weight * self.kl )
+                  (1 / self.kl) * kl_loss + (1 / self.pad) * pad_loss +\
+                    2 * torch.log(self.gamma * self.unsup_weight * self.kl *self.pad)
 
         out_dict = self.process_out_dict(loss = total_loss)
         log_dict = self.process_log_dict(sup_loss=(1 / self.gamma) * sup_loss.item(), 
                                          unsup_loss=(1 / self.unsup_weight) * unsup_loss.item(),
                                          kl_loss=(1 / self.kl) * kl_loss.item(), 
-                                         srd_loss=(1 / self.srd) * srd_loss.item(),
+                                        #  srd_loss=(1 / self.srd) * srd_loss.item(),
                                          pad_loss=(1 / self.pad) * pad_loss.item(),
                                          epoch=self.epoch
                                             )
@@ -162,7 +162,7 @@ class MyAlgorithm(AlgorithmBase):
         save_dict["gamma"] = self.gamma
         save_dict["kl"] = self.kl
         save_dict["pad"] = self.pad
-        save_dict["srd"] = self.srd
+        # save_dict["srd"] = self.srd
         save_dict["unsup_weight"] = self.unsup_weight
         return save_dict
 
@@ -172,7 +172,7 @@ class MyAlgorithm(AlgorithmBase):
         self.gamma = checkpoint["gamma"]
         self.kl = checkpoint["kl"]
         self.pad = checkpoint["pad"]
-        self.srd = checkpoint["srd"]
+        # self.srd = checkpoint["srd"]
         self.unsup_weight = checkpoint["unsup_weight"]
         return checkpoint
     

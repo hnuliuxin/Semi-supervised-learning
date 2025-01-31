@@ -124,7 +124,7 @@ def create_ossl_cv_config(
     cfg["dataset"] = dataset
     cfg["train_sampler"] = "RandomSampler"
     cfg["num_classes"] = num_classes
-    cfg["num_workers"] = 4
+    cfg["num_workers"] = 12
 
     # basic config
     cfg["seed"] = seed
@@ -164,25 +164,25 @@ def exp_OSKD_cv(label_amount):
     ]
 
     nets = [
-        ["resnet32x4", "resnet8x4"],
-        ["resnet32x4", "shuffleV1"],
-        ["wrn_40_2", "wrn_40_1"],
-        ["wrn_40_4", "wrn_16_2"],
-        ["wrn_40_4", "wrn_16_4"],
-        ["resnet34", "resnet10"],
-        ["resnet50", "resnet18"],
-        ["resnet34", "wrn_16_2"],
-        ["vgg13", "vgg8"],
-        ["wrn_40_1", "wrn_16_1"]
+        ["resnet32x4", "resnet8x4"]
+        # ["resnet32x4", "shuffleV1"],
+        # ["wrn_40_2", "wrn_40_1"],
+        # ["wrn_40_4", "wrn_16_2"],
+        # ["wrn_40_4", "wrn_16_4"],
+        # ["resnet34", "resnet10"],
+        # ["resnet50", "resnet18"],
+        # ["resnet34", "wrn_16_2"],
+        # ["vgg13", "vgg8"],
+        # ["wrn_40_1", "wrn_16_1"]
     ]
 
     datasets = [
         "cifar100_with_tiny_imagenet",
-        "cifar100_with_places365", 
-        "cifar100", 
-        "tiny_imagenet", 
-        "cifar100_and_tiny_imagenet", 
-        "cifar100_and_places365"
+        # "cifar100_with_places365", 
+        # "cifar100", 
+        # "tiny_imagenet", 
+        # "cifar100_and_tiny_imagenet", 
+        # "cifar100_and_places365"
     ]
     seeds = [0, 1, 2]
 
