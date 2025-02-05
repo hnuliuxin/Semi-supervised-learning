@@ -30,7 +30,7 @@ class myNet(nn.Module):
         nn.init.constant_(self.connector[1].bias, 0)
         nn.init.xavier_normal_(self.var_estimator[0].weight)
         nn.init.constant_(self.var_estimator[1].weight, 1)
-        nn.init.constant_(self.var_estimator[1].bias, 0)    
+        nn.init.constant_(self.var_estimator[1].bias, 0)   
 
     def forward(self, x, **kwargs):
         feats = self.backbone(x, only_feat=True)
@@ -61,24 +61,30 @@ def statm_loss(x, y):
     mean_gap = (x_mean - y_mean).pow(2).mean(1)
     return mean_gap.mean()
 
-def KD_Loss(logits_student, logits_teacher, temperature):# 温度修改为向量(N)
-    log_pred_student = F.log_softmax(logits_student / temperature, dim=1)
-    pred_teacher = F.softmax(logits_teacher / temperature, dim=1)
+def KD_Loss(logits_student, logits_teacher, temperature, args):# 温度修改为向量(N)
+    # print(logits_student.device)
+    # print(temperature.device)
+    temperature = temperature.unsqueeze(1).to(args.gpu)
+    logits_student_t = logits_student / temperature
+    log_pred_student = F.log_softmax(logits_student_t, dim=1)
+    logits_teacher_t = logits_teacher / temperature
+    pred_teacher = F.softmax(logits_teacher_t, dim=1)
     loss_kd = F.kl_div(log_pred_student, pred_teacher, reduction="none").sum(1).mean()
-    loss_kd *= temperature**2
+    loss_kd *= (temperature**2).mean()
     return loss_kd
 @ALGORITHMS.register('my')
 class MyAlgorithm(AlgorithmBase):
     def __init__(self, args, net_builder, tb_log=None, logger=None, teacher_net_builder=None):
         super().__init__(args, net_builder, tb_log, logger, teacher_net_builder)
-        self.init(T=args.T)
+        self.T = torch.linspace(1, 10, args.batch_size * 2).to(self.args.gpu)
+        self.init()
         #查看老师模型所有参数
         # for name, param in self.teacher_model.named_parameters():
         #     print(name, param.size())
 
-    def init(self, T):
+    def init(self):
         # self.teacher_model.requires_grad_(False)
-        self.T = T
+        # self.T = T
         weights = torch.nn.Parameter(torch.tensor([1.0, 1.0, 1.0, 1.0, 10]), requires_grad=True).to(self.args.gpu)
         self.gamma = weights[0]
         self.kl = weights[1]
@@ -128,7 +134,7 @@ class MyAlgorithm(AlgorithmBase):
 
 
             # 因为有include_lb_to_ulb,重复计算了有标签的蒸馏损失
-            kl_loss = KD_Loss(logits_x, logits_x_t, self.T)
+            kl_loss = KD_Loss(logits_x, logits_x_t, self.T, self.args)
 
             # srd_loss = statm_loss(feats_x2[index], feats_x_t2[index]) 
             # srd_loss = F.mse_loss(logits_x, logits_x_t)
@@ -176,15 +182,15 @@ class MyAlgorithm(AlgorithmBase):
         self.unsup_weight = checkpoint["unsup_weight"]
         return checkpoint
     
-    @staticmethod
-    def get_argument():
-        return [
-            SSL_Argument('--T', default=1, type=float, help='Temperature for distillation smoothing'),
-            # SSL_Argument('--gamma', default=1, type=float, help='weight for classification'),
-            # SSL_Argument('--kl', default=1, type=float, help='weight for KD'),
-            # SSL_Argument('--pad', default=1, type=float, help='weight for PAD'),
-            # SSL_Argument('--srd', default=1, type=float, help='weight for SRD'),
-        ]
+    # @staticmethod
+    # def get_argument():
+    #     return [
+    #         SSL_Argument('--T', default=1, type=float, help='Temperature for distillation smoothing'),
+    #         # SSL_Argument('--gamma', default=1, type=float, help='weight for classification'),
+    #         # SSL_Argument('--kl', default=1, type=float, help='weight for KD'),
+    #         # SSL_Argument('--pad', default=1, type=float, help='weight for PAD'),
+    #         # SSL_Argument('--srd', default=1, type=float, help='weight for SRD'),
+    #     ]
 
 
         
