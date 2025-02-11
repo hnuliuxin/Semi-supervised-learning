@@ -50,7 +50,7 @@ class AlgorithmBase:
         self.num_train_iter = args.num_train_iter
         self.num_eval_iter = args.num_eval_iter
         self.num_log_iter = args.num_log_iter
-        self.num_iter_per_epoch = int(self.num_train_iter // self.epochs)
+        self.num_iter_per_epoch = args.iter_per_epoch
         self.lambda_u = args.ulb_loss_ratio 
         self.use_cat = args.use_cat
         self.use_amp = args.amp
@@ -109,6 +109,7 @@ class AlgorithmBase:
         self._hooks = []  # record underlying hooks 
         self.hooks_dict = OrderedDict() # actual object to be used to call hooks
         self.set_hooks()
+        print("finish base init")
 
     def init(self, **kwargs):
         """
@@ -188,14 +189,15 @@ class AlgorithmBase:
         optimizer = get_optimizer(self.model, self.args.optim, self.args.lr, self.args.momentum, self.args.weight_decay, self.args.layer_decay)
         # 调试
         # self.lr_decay_epochs = None
-        if self.lr_decay_epochs is not None:
+        if self.lr_decay_epochs is not None and self.lr_decay_epochs != 'None':
             self.lr_decay_epochs = [int(x) for x in self.lr_decay_epochs.split(',')]
             print(self.lr_decay_epochs)
             scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=self.lr_decay_epochs, gamma=0.1)
         else:
-            scheduler = get_cosine_schedule_with_warmup(optimizer,
-                                                    self.num_train_iter,
-                                                    num_warmup_steps=self.args.num_warmup_iter)
+            # scheduler = get_cosine_schedule_with_warmup(optimizer,
+            #                                         self.num_train_iter,
+            #                                         num_warmup_steps=self.args.num_warmup_iter)
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.num_train_iter, eta_min=0)
         return optimizer, scheduler
 
     def set_model(self):
@@ -343,7 +345,7 @@ class AlgorithmBase:
                     self.it += 1
 
                 self.call_hook("after_train_epoch")
-                self.scheduler.step()
+                # self.scheduler.step()
         else:
             for epoch in range(self.start_epoch, self.epochs):
                 self.epoch = epoch
@@ -374,7 +376,7 @@ class AlgorithmBase:
                     self.it += 1
                 
                 self.call_hook("after_train_epoch")
-                self.scheduler.step()
+                # self.scheduler.step()
                 # info = torch.cuda.memory_summary(device=None, abbreviated=False)
                 # print(info)
                 torch.cuda.empty_cache()

@@ -72,8 +72,8 @@ class KD(AlgorithmBase):
             sup_loss = self.ce_loss(logits_x_lb, y_lb, reduction='mean')
             kd_loss = 0
             # 删除
-            if not self.args.include_lb_to_ulb:
-                kd_loss = KD_Loss(logits_x_lb, logits_x_lb_teacher, self.T)
+            # if not self.args.include_lb_to_ulb:
+            kd_loss = KD_Loss(logits_x_lb, logits_x_lb_teacher, self.T)
             if x_ulb_w is not None:
                 unsup_kd_loss = KD_Loss(logits_x_unlb, logits_x_unlb_teacher, self.T)
             else:

@@ -14,7 +14,7 @@ def create_configuration(cfg, cfg_file):
     )
     # print(cfg["save_name"])
     # resume
-    cfg["resume"] = True
+    # cfg["resume"] = True
     cfg["load_path"] = "{}/{}/latest_model.pth".format(
         cfg["save_dir"], cfg["save_name"]
     )
@@ -102,6 +102,15 @@ def create_oskd_cv_config(
     elif alg == "dtkd":
         cfg["T"] = 0.1
         cfg["p_cutoff"] = 0.95
+    elif alg == "dtkdV2":
+        cfg["sup_T"] = 5
+        cfg["T"] = 0.1
+        cfg["p_cutoff"] = 0.95
+    elif alg == "my":
+        cfg["kl"] = 1
+        cfg["pad"] = 1
+        cfg["srd"] = 1
+        
 
     # ulb_loss_ratio没有设置，因为每个算法的都不同。默认为1
 
@@ -147,8 +156,8 @@ def create_oskd_cv_config(
     cfg["seed"] = seed
 
     # distributed config
-    cfg["world_size"] = -1
-    cfg["rank"] = -1
+    cfg["world_size"] = 1
+    cfg["rank"] = 0
     cfg["multiprocessing_distributed"] = False
     cfg["dist_url"] = "tcp://127.0.0.1:" + str(port)
     cfg["dist_backend"] = "nccl"
@@ -176,7 +185,9 @@ def exp_oskd_cv(ID_labels_per_class, ID_classes, OOD_classes, OOD_labels):
         # "srd",
         # "fitnet",
         "dtkd",
-        # "pad"
+        "dtkdV2",
+        "pad",
+        "my"
     ]
 
     nets = [
@@ -188,7 +199,7 @@ def exp_oskd_cv(ID_labels_per_class, ID_classes, OOD_classes, OOD_labels):
         # ["resnet34", "resnet10"],
         # ["resnet50", "resnet18"],
         # ["resnet34", "wrn_16_2"],
-        # ["vgg13", "vgg8"],
+        ["vgg13", "vgg8"],
         # ["wrn_40_1", "wrn_16_1"]
     ]
 

@@ -13,7 +13,6 @@ def KD_Loss(logits_student, logits_teacher, temperature):
     loss_kd *= temperature**2
     return loss_kd
 
-
 @ALGORITHMS.register('dtkd')
 class DTKD(AlgorithmBase):
     """
@@ -140,8 +139,10 @@ class DTKDV2(AlgorithmBase):
     """
     def __init__(self, args, net_builder, tb_log=None, logger=None, teacher_net_builder=None, sup_T=5):
         super().__init__(args, net_builder, tb_log, logger, teacher_net_builder)
-        self.T = args.T
+        # self.T = args.T
+        self.T = 1 / sup_T
         self.sup_T = sup_T
+        self.gT = (self.sup_T - self.T) / self.epochs
         self.gamma = args.gamma
         self.alpha = args.alpha
         self.beta = args.beta
@@ -184,18 +185,19 @@ class DTKDV2(AlgorithmBase):
             # print(pseudo_label[0])
             unsup_loss = self.consistency_loss(logits_x_ulb, pseudo_label, 'ce', mask=mask)
 
-            kd_loss = KD_Loss(logits_x_lb, logits_x_lb_teacher, self.sup_T) + KD_Loss(logits_x_ulb, logits_x_ulb_teacher, self.T)
+            kd_loss = KD_Loss(logits_x_lb, logits_x_lb_teacher, self.sup_T) + KD_Loss(logits_x_ulb, logits_x_ulb_teacher, 1)
 
             total_loss = cls_loss * self.gamma + unsup_loss * self.beta + kd_loss * self.alpha
 
-            if self.it %2048 == 0:
-                self.T += 0.0245
+            # if self.it % self.num_iter_per_epoch == 0:
+            #     self.T += self.gT
 
         out_dict = self.process_out_dict(loss=total_loss)
         log_dict = self.process_log_dict(cls_loss=cls_loss.item(), 
                                          unsup_loss=unsup_loss.item(), 
                                          kd_loss=kd_loss.item(),
-                                         temprarure=self.T)
+                                         temprarure=self.T,
+                                         sup_T=self.sup_T)
         return out_dict, log_dict
 
     def get_save_dict(self):

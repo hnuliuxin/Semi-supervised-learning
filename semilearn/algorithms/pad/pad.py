@@ -108,12 +108,13 @@ class PAD(AlgorithmBase):
 
             sup_loss = self.ce_loss(logits_x[:batch_size], y_lb, reduction='mean')
 
-            if self.it / 2048 < 130:
+            if self.it / self.num_iter_per_epoch < 130:
                 kd_loss = self.consistency_loss(feats_x, feats_x_teacher, name = "mse")
             else:
                 kd_loss = torch.mean(
                     (feats_x - feats_x_teacher) ** 2 / (self.eps + torch.exp(log_variances))
                     + log_variances, dim=1)
+                kd_loss = torch.mean(kd_loss)
 
             total_loss = sup_loss * self.gamma + kd_loss * self.alpha
 

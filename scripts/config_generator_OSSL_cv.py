@@ -13,7 +13,7 @@ def create_configuration(cfg, cfg_file):
     )
     # print(cfg["save_name"])
     # resume
-    cfg["resume"] = True
+    # cfg["resume"] = True
     cfg["load_path"] = "{}/{}/latest_model.pth".format(
         cfg["save_dir"], cfg["save_name"]
     )
@@ -123,7 +123,7 @@ def create_ossl_cv_config(
     cfg["crop_ratio"] = crop_ratio
 
     # optim config
-    cfg["optim"] = "SGD"
+    cfg["optim"] = "AdamW"
     cfg["lr"] = lr
     cfg["layer_decay"] = layer_decay
     cfg["lr_decay_epochs"] = lr_decay_epochs
@@ -147,12 +147,12 @@ def create_ossl_cv_config(
     cfg["seed"] = seed
 
     # distributed config
-    cfg["world_size"] = -1
-    cfg["rank"] = -1
+    cfg["world_size"] = 1
+    cfg["rank"] = 0
     cfg["multiprocessing_distributed"] = False
     cfg["dist_url"] = "tcp://127.0.0.1:" + str(port)
     cfg["dist_backend"] = "nccl"
-    cfg["gpu"] = 1
+    cfg["gpu"] = 0
 
     # other config
     cfg["overwrite"] = True
@@ -200,9 +200,10 @@ def exp_ossl_cv(ID_labels_per_class, ID_classes, OOD_classes, OOD_labels):
     count = 0
 
     weight_decay = 5e-4
-    lr = 5e-2
-    lr_decay_epochs = "20,60,100,150"
-    layer_decay = 1.0
+    lr = 5e-4
+    # lr_decay_epochs = "20,60,100,150"
+    lr_decay_epochs = None
+    layer_decay = 0.5
     warmup = 0
     amp = False
     img_size = 32
