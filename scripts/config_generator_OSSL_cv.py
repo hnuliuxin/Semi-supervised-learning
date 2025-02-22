@@ -9,7 +9,7 @@ def create_configuration(cfg, cfg_file):
         seed=cfg["seed"],
     )
     # resume
-    cfg["resume"] = True
+    # cfg["resume"] = True
     cfg["load_path"] = "{}/{}/latest_model.pth".format(
         cfg["save_dir"], cfg["save_name"]
     )
@@ -69,8 +69,8 @@ def create_OSSL_cv_config(
         cfg["num_train_iter"] = 1024 * 200
         cfg["num_log_iter"] = 256
         cfg["num_eval_iter"] = 2048
-        cfg["batch_size"] = 8
-        cfg["eval_batch_size"] = 16
+        cfg["batch_size"] = 64
+        cfg["eval_batch_size"] = 128
 
     cfg["num_warmup_iter"] = int(1024 * warmup)
     cfg["num_labels"] = num_labels
@@ -190,6 +190,12 @@ def create_OSSL_cv_config(
         cfg["label_smoothing"] = 0.1
         cfg["num_uda_warmup_iter"] = 5000
         cfg["num_stu_wait_iter"] = 3000
+    elif alg == "flexmatch":
+        cfg["hard_label"] = True
+        cfg["T"] = 0.5
+        cfg["thresh_warmup"] = True
+        cfg["p_cutoff"] = 0.95
+        cfg["ulb_loss_ratio"] = 1.0
 
     elif alg == "iomatch":
         cfg["ema_m"] = 0.999
@@ -216,7 +222,7 @@ def create_OSSL_cv_config(
     cfg["dataset"] = dataset
     cfg["train_sampler"] = "RandomSampler"
     cfg["num_classes"] = num_classes
-    cfg["num_workers"] = 4
+    cfg["num_workers"] = 6
 
     # basic config
     cfg["seed"] = seed
@@ -224,10 +230,10 @@ def create_OSSL_cv_config(
     # distributed config
     cfg["world_size"] = 1
     cfg["rank"] = 0
-    cfg["multiprocessing_distributed"] = True
+    cfg["multiprocessing_distributed"] = False
     cfg["dist_url"] = "tcp://127.0.0.1:" + str(port)
     cfg["dist_backend"] = "nccl"
-    cfg["gpu"] = None
+    cfg["gpu"] = 0
 
     if alg == "crmatch" and dataset == "stl10":
         cfg["multiprocessing_distributed"] = False
@@ -249,49 +255,50 @@ def exp_OSSL_cv(label_amount):
         os.mkdir(save_path)
     
     algs = [
-        "fixmatch",
-        "uda",
-        "pseudolabel",
-        "mixmatch",
-        "remixmatch",
-        "crmatch",
-        "comatch",
-        "simmatch",
-        "meanteacher",
-        "pimodel",
-        "dash",
-        "fullysupervised",
+        # "fixmatch",
+        # "uda",
+        # "pseudolabel",
+        # "mixmatch",
+        # "remixmatch",
+        # "crmatch",
+        # "comatch",
+        # "simmatch",
+        # "meanteacher",
+        # "pimodel",
+        # "dash",
+        # "fullysupervised",
         "supervised",
-        "iomatch",
+        "flexmatch",
+        # "iomatch",
         "openmatch"
     ]
 
     nets = [
         "resnet8x4",
         "resnet32x4",
-        "resnet50",
-        "resnet18",
-        "vit_tiny_patch2_32",
+        # "resnet50",
+        # "resnet18",
+        # "vit_tiny_patch2_32",
         "wrn_16_1",
-        "wrn_40_1",
-        "mobilenet",
+        # "wrn_40_1",
+        # "mobilenet",
         "shuffleV1",
-        "shuffleV2",
+        # "shuffleV2",
         "vgg8",
-        "vgg13",
-        "resnet32x4",
-        "wrn_40_2"
+        # "vgg13",
+        # "resnet32x4",
+        # "wrn_40_2"
     ]
 
     datasets = [
         "cifar100_with_tiny_imagenet",
-        "cifar100_with_places365", 
-        "cifar100", 
-        "tiny_imagenet", 
-        "cifar100_and_tiny_imagenet", 
-        "cifar100_and_places365"
+        # "cifar100_with_places365", 
+        # "cifar100", 
+        # "tiny_imagenet", 
+        # "cifar100_and_tiny_imagenet", 
+        # "cifar100_and_places365"
     ]
-    seeds = [0, 1, 2]
+    seeds = [0, 1, 2, 3, 4, 5, 6, 7]
 
     dist_port = range(10001, 15120, 1)
     count = 0
@@ -348,7 +355,7 @@ if __name__ == "__main__":
         os.makedirs("./saved_models/OSSL_cv/", exist_ok=True)
     if not os.path.exists("./config/OSSL_cv/"):
         os.makedirs("./config/OSSL_cv/", exist_ok=True)
-    label_amount = {"s": [2, 2], "m": [4, 4], "l":[25, 25], "full":[500, 500]}
+    label_amount = {"l":[100, 100], "full":[500, 500]}
     for i in label_amount:
         exp_OSSL_cv(label_amount=label_amount[i])
 

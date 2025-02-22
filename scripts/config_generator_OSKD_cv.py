@@ -10,7 +10,7 @@ def create_configuration(cfg, cfg_file):
         seed=cfg["seed"],
     )
     # resume
-    cfg["resume"] = True
+    # cfg["resume"] = True
     cfg["load_path"] = "{}/{}/latest_model.pth".format(
         cfg["save_dir"], cfg["save_name"]
     )
@@ -70,8 +70,8 @@ def create_ossl_cv_config(
         cfg["num_train_iter"] = 1024 * 200
         cfg["num_log_iter"] = 256
         cfg["num_eval_iter"] = 2048
-        cfg["batch_size"] = 8
-        cfg["eval_batch_size"] = 16
+        cfg["batch_size"] = 64
+        cfg["eval_batch_size"] = 128
 
     cfg["num_warmup_iter"] = int(1024 * warmup)
     cfg["num_labels"] = num_labels
@@ -124,7 +124,7 @@ def create_ossl_cv_config(
     cfg["dataset"] = dataset
     cfg["train_sampler"] = "RandomSampler"
     cfg["num_classes"] = num_classes
-    cfg["num_workers"] = 12
+    cfg["num_workers"] = 8
 
     # basic config
     cfg["seed"] = seed
@@ -155,7 +155,6 @@ def exp_OSKD_cv(label_amount):
     algs = [
         "kd",
         "dkd",
-        "crd",
         "srd",
         "fitnet",
         "dtkd",
@@ -164,16 +163,16 @@ def exp_OSKD_cv(label_amount):
     ]
 
     nets = [
-        ["resnet32x4", "resnet8x4"]
-        # ["resnet32x4", "shuffleV1"],
+        ["resnet32x4", "resnet8x4"],
+        ["resnet32x4", "shuffleV1"],
         # ["wrn_40_2", "wrn_40_1"],
         # ["wrn_40_4", "wrn_16_2"],
         # ["wrn_40_4", "wrn_16_4"],
         # ["resnet34", "resnet10"],
         # ["resnet50", "resnet18"],
         # ["resnet34", "wrn_16_2"],
-        # ["vgg13", "vgg8"],
-        # ["wrn_40_1", "wrn_16_1"]
+        ["vgg13", "vgg8"],
+        ["wrn_40_1", "wrn_16_1"]
     ]
 
     datasets = [
@@ -184,7 +183,7 @@ def exp_OSKD_cv(label_amount):
         # "cifar100_and_tiny_imagenet", 
         # "cifar100_and_places365"
     ]
-    seeds = [0, 1, 2]
+    seeds = [0, 1, 2, 3, 4, 5, 6, 7]
 
     dist_port = range(10001, 15120, 1)
     count = 0
@@ -245,7 +244,7 @@ if __name__ == "__main__":
         os.makedirs("./saved_models/OSKD_cv/", exist_ok=True)
     if not os.path.exists("./config/OSKD_cv/"):
         os.makedirs("./config/OSKD_cv/", exist_ok=True)
-    label_amount = {"s": [2, 2], "m": [25, 25], "l":[100,100], "full":[500, 500]}
+    label_amount = {"l":[100,100], "full":[500, 500]}
     for i in label_amount:
         exp_OSKD_cv(label_amount=label_amount[i])
 
