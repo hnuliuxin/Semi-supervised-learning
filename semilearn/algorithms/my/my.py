@@ -16,35 +16,33 @@ class myNet(nn.Module):
         self.backbone = backbone
         self.feat_s_shape = feat_s_shape
         self.feat_t_shape = feat_t_shape
-        # 改变通道数
+        # print(f"self.feat_s_shape:",self.feat_s_shape)
+        # print(f"self.feat_t_shape:",self.feat_t_shape)
         self.connector = nn.Sequential(
-            nn.Conv2d(feat_s_shape[1], feat_t_shape[1], kernel_size=1, stride=1, padding=0, bias=False),
-            nn.BatchNorm2d(feat_t_shape[1]),
-            nn.ReLU())
-        self.var_estimator = nn.Sequential(
-            nn.Linear(feat_t_shape[1], feat_t_shape[1]),
-            nn.BatchNorm1d(feat_t_shape[1])
+            nn.Linear(feat_t_shape[1], feat_s_shape[1]),
+            nn.BatchNorm1d(feat_s_shape[1])
         )
-        nn.init.xavier_normal_(self.connector[0].weight)
-        nn.init.constant_(self.connector[1].weight, 1)
-        nn.init.constant_(self.connector[1].bias, 0)
+        self.var_estimator = nn.Sequential(
+            nn.Linear(feat_s_shape[1], feat_s_shape[1]),
+            nn.BatchNorm1d(feat_s_shape[1])
+        )
         nn.init.xavier_normal_(self.var_estimator[0].weight)
         nn.init.constant_(self.var_estimator[1].weight, 1)
-        nn.init.constant_(self.var_estimator[1].bias, 0)   
+        nn.init.constant_(self.var_estimator[1].bias, 0)  
+        nn.init.xavier_normal_(self.connector[0].weight)
+        nn.init.constant_(self.connector[1].weight, 1)
+        nn.init.constant_(self.connector[1].bias, 0)  
 
     def forward(self, x, **kwargs):
         feats = self.backbone(x, only_feat=True)
-        feats_x2 = feats[-2]
         feats_x = feats[-1]
         logits_x = self.backbone(feats_x, only_fc=True)
-        if self.feat_s_shape[1] != self.feat_t_shape[1]:
-            feats_x2 = self.connector(feats_x2)
 
         log_variances = self.var_estimator(feats_x)
+
         return_dict = {
             'logits': logits_x,
             'feat': feats_x,
-            'feat2': feats_x2,
             'log_var': log_variances
         }
         return return_dict
@@ -69,14 +67,14 @@ def KD_Loss(logits_student, logits_teacher, temperature, args):# 温度修改为
     log_pred_student = F.log_softmax(logits_student_t, dim=1)
     logits_teacher_t = logits_teacher / temperature
     pred_teacher = F.softmax(logits_teacher_t, dim=1)
-    loss_kd = F.kl_div(log_pred_student, pred_teacher, reduction="none").sum(1).mean()
-    loss_kd *= (temperature**2).mean()
+    kl_div_per_sample  = F.kl_div(log_pred_student, pred_teacher, reduction="none").sum(1)
+    loss_kd = (kl_div_per_sample * (temperature.squeeze(1)**2)).mean()
     return loss_kd
 @ALGORITHMS.register('my')
 class MyAlgorithm(AlgorithmBase):
     def __init__(self, args, net_builder, tb_log=None, logger=None, teacher_net_builder=None):
         super().__init__(args, net_builder, tb_log, logger, teacher_net_builder)
-        self.T = torch.linspace(1, 10, args.batch_size * 2).to(self.args.gpu)
+        self.T = torch.linspace(1, 5, args.batch_size * 2).to(self.args.gpu)
         self.init()
         #查看老师模型所有参数
         # for name, param in self.teacher_model.named_parameters():
@@ -85,19 +83,21 @@ class MyAlgorithm(AlgorithmBase):
     def init(self):
         # self.teacher_model.requires_grad_(False)
         # self.T = T
-        weights = torch.nn.Parameter(torch.tensor([1.0, 1.0, 1.0, 1.0, 10]), requires_grad=True).to(self.args.gpu)
-        self.gamma = weights[0]
-        self.kl = weights[1]
-        self.pad = weights[2]
-        # self.srd = weights[3]
-        self.unsup_weight = weights[4]
+        self.weights = torch.nn.Parameter(torch.tensor([1.0, 1.0]), requires_grad=True)#.to(self.args.gpu)
+        # self.weights.requires_grad = True
+        self.optimizer.add_param_group({'params':[self.weights], 'lr':5e-5})
+        self.gamma = self.weights[0]
+        self.unsup_weight = self.weights[1]
+        self.kl = torch.nn.Parameter(torch.tensor(10.0), requires_grad=True)
+        self.optimizer.add_param_group({'params':self.kl, 'lr':1e-4})
+        
         self.eps = 1e-6
         with torch.no_grad():
             self.model.eval()
             self.teacher_model.eval()
             data = torch.randn(2, 3, self.args.img_size, self.args.img_size)
-            self.feat_s = self.model(data, only_feat=True)[-2]
-            self.feat_t = self.teacher_model(data, only_feat=True)[-2]
+            self.feat_s = self.model(data, only_feat=True)[-1]
+            self.feat_t = self.teacher_model(data, only_feat=True)[-1]
             self.model = myNet(self.model, num_classes=self.num_classes, feat_s_shape=self.feat_s.shape, feat_t_shape=self.feat_t.shape)
             self.ema_model = myNet(self.ema_model, num_classes=self.num_classes, feat_s_shape=self.feat_s.shape, feat_t_shape=self.feat_t.shape)
             self.ema_model.load_state_dict(self.model.state_dict())
@@ -115,47 +115,63 @@ class MyAlgorithm(AlgorithmBase):
             outs_x = self.model(input)
             logits_x = outs_x['logits']
             feats_x = outs_x['feat']
-            feats_x2 = outs_x['feat2']
             log_variances = outs_x['log_var']
 
-            probs = F.softmax(logits_x, dim=1)
-            scores = -torch.sum(probs * torch.log(probs), dim=1)
-            index = torch.argsort(scores, descending=True)
-            
             with torch.no_grad():
                 outs_x_t = self.teacher_model(input)
                 logits_x_t = outs_x_t['logits']
                 feats_x_t2 = outs_x_t['feat'][-2]
                 feats_x_t = outs_x_t['feat'][-1]
+                if feats_x_t.shape[1] != feats_x.shape[1]:
+                    feats_x_t = self.model.connector(feats_x_t)
+
+
+            probs = F.softmax(logits_x, dim=1)
+            pad_scores = torch.mean((feats_x - feats_x_t) ** 2 / (self.eps + torch.exp(log_variances)) + log_variances, dim=1)
+            # print(pad_scores.shape)
+            # scores = -torch.sum(probs * torch.log(probs), dim=1)
+            # index = torch.argsort(scores, descending=True)    #0.6936
+            # index = torch.argsort(scores) # 0.6825
+            index = torch.argsort(pad_scores, descending=True)
+            # index = torch.argsort(pad_scores)
+            
+            # print("index:", index)
+            # print("T:", self.T[index])
 
             #有标签的损失
             sup_loss = self.ce_loss(logits_x[:batch_size], y_lb, reduction='mean')
-            unsup_loss = F.mse_loss(logits_x[batch_size:], logits_x_t[batch_size:], reduction='mean') 
+            unsup_loss = F.mse_loss(feats_x[batch_size:], feats_x_t[batch_size:], reduction='mean') # 试一下两个batch都计算
 
 
             # 因为有include_lb_to_ulb,重复计算了有标签的蒸馏损失
-            kl_loss = KD_Loss(logits_x, logits_x_t, self.T, self.args)
+            kl_loss = KD_Loss(logits_x, logits_x_t, self.T[index], self.args)
 
-            # srd_loss = statm_loss(feats_x2[index], feats_x_t2[index]) 
-            # srd_loss = F.mse_loss(logits_x, logits_x_t)
-            # srd_loss = 0
-
-            pad_loss = torch.mean(
-                    (feats_x[index] - feats_x_t[index]) ** 2 / (self.eps + torch.exp(log_variances[index]))
-                    + log_variances[index], dim=1).mean()  
+            # pad_loss = torch.mean(
+            #         (feats_x[index] - feats_x_t[index]) ** 2 / (self.eps + torch.exp(log_variances[index]))
+            #         + log_variances[index], dim=1).mean()  
             # pad_loss = 0
             
             #求和
-            total_loss = (1 / self.gamma) * sup_loss + (1 / self.unsup_weight) * unsup_loss + \
-                  (1 / self.kl) * kl_loss + (1 / self.pad) * pad_loss +\
-                    2 * torch.log(self.gamma * self.unsup_weight * self.kl *self.pad)
+            # self.gamma = self.weights[0]
+            # self.kl = self.weights[1]
+            # self.pad = self.weights[2]
+            # # self.srd = self.weights[3]
+            # self.unsup_weight = self.weights[4]
+
+            total_loss = (1 / (2 * self.gamma * self.gamma)) * sup_loss + (1 / (2 * self.unsup_weight * self.unsup_weight)) * unsup_loss 
+            total_loss += (1 / (2 * self.kl * self.kl) ) * kl_loss
+            # total_loss += (1 / self.pad) * pad_loss
+            total_loss += torch.log(self.gamma * self.unsup_weight * self.kl ) # * self.pad
 
         out_dict = self.process_out_dict(loss = total_loss)
-        log_dict = self.process_log_dict(sup_loss=(1 / self.gamma) * sup_loss.item(), 
-                                         unsup_loss=(1 / self.unsup_weight) * unsup_loss.item(),
-                                         kl_loss=(1 / self.kl) * kl_loss.item(), 
+        log_dict = self.process_log_dict(sup_loss=sup_loss.item(), 
+                                         unsup_loss=unsup_loss.item(),
+                                         kl_loss=kl_loss.item(), 
                                         #  srd_loss=(1 / self.srd) * srd_loss.item(),
-                                         pad_loss=(1 / self.pad) * pad_loss.item(),
+                                        #  pad_loss=(1 / self.pad) * pad_loss.item(),
+                                        gamma=self.gamma,
+                                        unsup_weight=self.unsup_weight,
+                                        kl=self.kl.item(),
                                          epoch=self.epoch
                                             )
     
@@ -167,7 +183,7 @@ class MyAlgorithm(AlgorithmBase):
         save_dict["T"] = self.T
         save_dict["gamma"] = self.gamma
         save_dict["kl"] = self.kl
-        save_dict["pad"] = self.pad
+        # save_dict["pad"] = self.pad
         # save_dict["srd"] = self.srd
         save_dict["unsup_weight"] = self.unsup_weight
         return save_dict
@@ -177,7 +193,7 @@ class MyAlgorithm(AlgorithmBase):
         self.T = checkpoint["T"]
         self.gamma = checkpoint["gamma"]
         self.kl = checkpoint["kl"]
-        self.pad = checkpoint["pad"]
+        # self.pad = checkpoint["pad"]
         # self.srd = checkpoint["srd"]
         self.unsup_weight = checkpoint["unsup_weight"]
         return checkpoint
