@@ -22,6 +22,8 @@ class TimerHook(Hook):
         algorithm.end_batch.record()
     
     def after_train_step(self, algorithm):
-        algorithm.log_dict['lr'] = algorithm.optimizer.param_groups[-1]['lr']
+        # algorithm.log_dict['lr'] = algorithm.optimizer.param_groups[-3]['lr']
+        # algorithm.log_dict['weights_lr'] = algorithm.optimizer.param_groups[-2]['lr']
+        # algorithm.log_dict['kl_lr'] = algorithm.optimizer.param_groups[-1]['lr']
         # algorithm.log_dict['train/prefecth_time'] = algorithm.start_batch.elapsed_time(algorithm.end_batch) / 1000.
         algorithm.start_batch.record()
